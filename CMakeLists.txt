@@ -20,5 +20,5 @@ catkin_package()
 include_directories(${Eigen_INCLUDE_DIRS})
 include_directories(${catkin_INCLUDE_DIRS})
 
-add_executable(add_table src/add_table.cpp)
-target_link_libraries(add_table ${catkin_LIBRARIES})
+add_executable(sync_box src/sync_box.cpp)
+target_link_libraries(sync_box ${catkin_LIBRARIES})
