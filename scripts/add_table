@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+rosrun moveit_tests sync_box 1.0 0.0 0.75 1.0 2.0 0.04 table
+
