@@ -33,39 +33,44 @@ public:
         double length, double width, double height)
     {
         moveit_msgs::CollisionObject obj;
-        if (retrieveBox(name, obj)) {
-            if (obj.primitives.size() != 1 ||
-                obj.primitives.front().type != shape_msgs::SolidPrimitive::BOX)
-            {
-                // this is not the box you're looking for
-                removeObject(name);
-                addBox(name, x, y, z, length, width, height);
-            }
-            else if (hasDimensions(obj, length, width, height) &&
-                hasPosition(obj, x, y, z))
-            {
-                // box is the same box
-                ROS_DEBUG("Box is the same box");
-                return;
-            }
-            else if (hasDimensions(obj, length, width, height)) {
-                // box moved position
-                moveBox(obj, x, y, z);
-            }
-            else if (hasPosition(obj, x, y, z)) {
-                // box grew or shrunk
-                removeObject(name);
-                addBox(name, x, y, z, length, width, height);
+        try {
+            if (retrieveBox(name, obj)) {
+                if (obj.primitives.size() != 1 ||
+                    obj.primitives.front().type != shape_msgs::SolidPrimitive::BOX)
+                {
+                    // this is not the box you're looking for
+                    removeObject(name);
+                    addBox(name, x, y, z, length, width, height);
+                }
+                else if (hasDimensions(obj, length, width, height) &&
+                    hasPosition(obj, x, y, z))
+                {
+                    // box is the same box
+                    ROS_DEBUG("Box is the same box");
+                    return;
+                }
+                else if (hasDimensions(obj, length, width, height)) {
+                    // box moved position
+                    moveBox(obj, x, y, z);
+                }
+                else if (hasPosition(obj, x, y, z)) {
+                    // box grew or shrunk
+                    removeObject(name);
+                    addBox(name, x, y, z, length, width, height);
+                }
+                else {
+                    // box is completely different
+                    removeObject(name);
+                    addBox(name, x, y, z, length, width, height);
+                }
             }
             else {
-                // box is completely different
-                removeObject(name);
+                // there is no box
                 addBox(name, x, y, z, length, width, height);
             }
         }
-        else {
-            // there is no box
-            addBox(name, x, y, z, length, width, height);
+        catch (const std::runtime_error& ex) {
+            // ...whatever, doing this on a loop now
         }
     }
 
