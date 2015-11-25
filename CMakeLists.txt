@@ -8,8 +8,8 @@ find_package(
     catkin REQUIRED
         cmake_modules
         moveit_core
-        moveit_msgs 
-        moveit_ros_move_group 
+        moveit_msgs
+        moveit_ros_move_group
         moveit_ros_planning
         moveit_ros_planning_interface
         roscpp)
@@ -22,3 +22,9 @@ include_directories(${catkin_INCLUDE_DIRS})
 
 add_executable(sync_box src/sync_box.cpp)
 target_link_libraries(sync_box ${catkin_LIBRARIES})
+
+add_executable(sync_mesh src/sync_mesh.cpp)
+target_link_libraries(sync_mesh ${catkin_LIBRARIES})
+
+add_executable(distance_field_test src/distance_field_test.cpp)
+target_link_libraries(distance_field_test ${catkin_LIBRARIES})

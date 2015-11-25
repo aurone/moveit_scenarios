@@ -112,7 +112,7 @@ private:
     {
         ROS_DEBUG("Waiting for /get_planning_scene service");
         m_get_planning_scene_srv.waitForExistence();
-    
+
         // get the planning scene
         moveit_msgs::GetPlanningScene packet;
         packet.request.components.components =
@@ -158,7 +158,7 @@ private:
         primitive.dimensions[0] = length;
         primitive.dimensions[1] = width;
         primitive.dimensions[2] = height;
-    
+
         geometry_msgs::Pose box_pose;
         box_pose.orientation.w = 1.0;
         box_pose.orientation.x = box_pose.orientation.y = box_pose.orientation.z = 0.0;
@@ -211,7 +211,7 @@ int main(int argc, char* argv[])
 {
     // x, y, z, length, width, height
     if (argc < 8) {
-        fprintf(stderr, "Usage: add_table <x> <y> <z> <length> <width> <height> <name>\n");
+        fprintf(stderr, "Usage: sync_box <x> <y> <z> <length> <width> <height> <name>\n");
         return 1;
     }
 
