@@ -1,6 +1,11 @@
+// standard includes
 #include <algorithm>
 #include <string>
 #include <stdexcept>
+
+// system includes
+#include <Eigen/Dense>
+#include <eigen_conversions/eigen_msg.h>
 #include <moveit_msgs/CollisionObject.h>
 #include <ros/ros.h>
 #include <moveit/move_group_interface/move_group.h>
@@ -28,7 +33,11 @@ public:
         ROS_INFO("...still hate everything");
     }
 
-    bool init(const std::string& name, const std::string& fname, const geometry_msgs::Point& pos)
+    bool init(
+        const std::string& name,
+        const std::string& fname,
+        const geometry_msgs::Pose& pose,
+        double scale = 1.0)
     {
         shapes::Mesh* mesh = shapes::createMeshFromResource(fname);
         if (!mesh) {
@@ -39,7 +48,9 @@ public:
         m_name = name;
         m_fname = fname;
         m_mesh = mesh;
-        m_pos = pos;
+        m_pose = pose;
+        m_scale = scale;
+        m_mesh_sig = getMeshSignature();
         return true;
     }
 
@@ -51,34 +62,34 @@ public:
 
         moveit_msgs::CollisionObject obj;
         try {
-            if (retrieveMesh(obj)) {
-                if (obj.meshes.size() != 1) {
-                    // this is not the box you're looking for
-                    removeObject();
-                    addMesh();
-                }
-                else if (true /* TODO: same mesh at some pose */) {
+            if (retrieveCollisionObject(obj)) {
+                if (sameCollisionObject(obj) && samePosition(obj)) {
                     // box is the same box
                     ROS_DEBUG("Mesh is the same mesh");
                     return;
                 }
-                else if (false /* TODO: same mesh at different pose */) {
+                else if (sameCollisionObject(obj) && !samePosition(obj)) {
                     // box moved position
-                    moveBox(obj);
+                    ROS_INFO("Pose is different");
+                    moveMesh(obj);
                 }
-                else if (false /* TODO: different mesh at same pose */) {
-                    // box grew or shrunk
+                else if (!sameCollisionObject(obj) && samePosition(obj)) {
+                    // mesh diff? TODO: check for scale here or potentially
+                    // entire mesh
+                    ROS_INFO("Mesh is different");
                     removeObject();
                     addMesh();
                 }
                 else {
                     // box is completely different
+                    ROS_INFO("Everything is different");
                     removeObject();
                     addMesh();
                 }
             }
             else {
                 // there is no box
+                ROS_INFO("There is no spoon...");
                 addMesh();
             }
         }
@@ -96,23 +107,72 @@ private:
     std::string m_name;
     std::string m_fname;
     shapes::Mesh* m_mesh;
+    double m_mesh_sig;
 
-    geometry_msgs::Point m_pos;
+    geometry_msgs::Pose m_pose;
 
-    bool hasPosition(const moveit_msgs::CollisionObject& obj) const
+    double m_scale;
+
+    double getMeshSignature() const
+    {
+        double sig = 0;
+        for (int i = 0; i < m_mesh->vertex_count; ++i) {
+            double ix = m_scale * m_mesh->vertices[3 * i + 0];
+            double iy = m_scale * m_mesh->vertices[3 * i + 1];
+            double iz = m_scale * m_mesh->vertices[3 * i + 2];
+            for (int j = i + 1; j < m_mesh->vertex_count; ++j) {
+                double jx = m_scale * m_mesh->vertices[3 * j + 0];
+                double jy = m_scale * m_mesh->vertices[3 * j + 1];
+                double jz = m_scale * m_mesh->vertices[3 * j + 2];
+
+                double dsq = (jx - ix) * (jx - ix) + (jy - iy) * (jy - iy) + (jz - iz) * (jz - iz);
+                sig += dsq;
+            }
+        }
+        return sig;
+    }
+
+    double getMeshSignature(const shape_msgs::Mesh& mesh) const
+    {
+        double sig = 0;
+        for (size_t i = 0; i < mesh.vertices.size(); ++i) {
+            double ix = mesh.vertices[i].x;
+            double iy = mesh.vertices[i].y;
+            double iz = mesh.vertices[i].z;
+            for (size_t j = i + 1; j < mesh.vertices.size(); ++j) {
+                double jx = mesh.vertices[j].x;
+                double jy = mesh.vertices[j].y;
+                double jz = mesh.vertices[j].z;
+
+                double dsq = (jx - ix) * (jx - ix) + (jy - iy) * (jy - iy) + (jz - iz) * (jz - iz);
+                sig += dsq;
+            }
+        }
+        return sig;
+    }
+
+    bool sameCollisionObject(const moveit_msgs::CollisionObject& obj) const
+    {
+        return obj.meshes.size() == 1 &&
+            obj.meshes.front().vertices.size() == m_mesh->vertex_count &&
+            obj.meshes.front().triangles.size() == m_mesh->triangle_count &&
+            fabs(getMeshSignature(obj.meshes.front()) - m_mesh_sig) < 1e-3;
+    }
+
+    bool samePosition(const moveit_msgs::CollisionObject& obj) const
     {
         return obj.mesh_poses.size() == 1 &&
-                obj.mesh_poses.front().orientation.w == 1.0 &&
-                obj.mesh_poses.front().orientation.x == 0.0 &&
-                obj.mesh_poses.front().orientation.y == 0.0 &&
-                obj.mesh_poses.front().orientation.z == 0.0 &&
-                obj.mesh_poses.front().position.x == m_pos.x &&
-                obj.mesh_poses.front().position.y == m_pos.y &&
-                obj.mesh_poses.front().position.z == m_pos.z;
+                obj.mesh_poses.front().orientation.w == m_pose.orientation.w &&
+                obj.mesh_poses.front().orientation.x == m_pose.orientation.x &&
+                obj.mesh_poses.front().orientation.y == m_pose.orientation.y &&
+                obj.mesh_poses.front().orientation.z == m_pose.orientation.z &&
+                obj.mesh_poses.front().position.x == m_pose.position.x &&
+                obj.mesh_poses.front().position.y == m_pose.position.y &&
+                obj.mesh_poses.front().position.z == m_pose.position.z;
    }
 
     // returns true if box was found in planning scene; false otherwise
-    bool retrieveMesh(moveit_msgs::CollisionObject& obj)
+    bool retrieveCollisionObject(moveit_msgs::CollisionObject& obj)
     {
         ROS_DEBUG("Waiting for /get_planning_scene service");
         m_get_planning_scene_srv.waitForExistence();
@@ -159,9 +219,9 @@ private:
         // convert shapes::Mesh to shape_msgs::Mesh
         mesh.vertices.resize(m_mesh->vertex_count);
         for (int i = 0; i < m_mesh->vertex_count; ++i) {
-            mesh.vertices[i].x = m_mesh->vertices[3 * i + 0];
-            mesh.vertices[i].y = m_mesh->vertices[3 * i + 1];
-            mesh.vertices[i].z = m_mesh->vertices[3 * i + 2];
+            mesh.vertices[i].x = m_scale * m_mesh->vertices[3 * i + 0];
+            mesh.vertices[i].y = m_scale * m_mesh->vertices[3 * i + 1];
+            mesh.vertices[i].z = m_scale * m_mesh->vertices[3 * i + 2];
         }
 
         mesh.triangles.resize(m_mesh->triangle_count);
@@ -171,14 +231,7 @@ private:
             mesh.triangles[i].vertex_indices[2] = m_mesh->triangles[3 * i + 2];
         }
 
-        geometry_msgs::Pose mesh_pose;
-        mesh_pose.position.x = m_pos.x;
-        mesh_pose.position.y = m_pos.y;
-        mesh_pose.position.z = m_pos.z;
-        mesh_pose.orientation.w = 1.0;
-        mesh_pose.orientation.x = 0.0;
-        mesh_pose.orientation.y = 0.0;
-        mesh_pose.orientation.z = 0.0;
+        geometry_msgs::Pose mesh_pose = m_pose;
 
         mesh_object.meshes.push_back(mesh);
         mesh_object.mesh_poses.push_back(mesh_pose);
@@ -194,6 +247,7 @@ private:
     {
         moveit_msgs::CollisionObject box_object;
         box_object.header.stamp = ros::Time::now();
+        box_object.header.frame_id = "odom_combined";
         box_object.id = m_name;
         box_object.operation = moveit_msgs::CollisionObject::REMOVE;
         ROS_INFO("Removing mesh '%s'", m_name.c_str());
@@ -201,17 +255,16 @@ private:
         ros::Duration(1.0).sleep();
     }
 
-    void moveBox(const moveit_msgs::CollisionObject& obj)
+    void moveMesh(const moveit_msgs::CollisionObject& obj)
     {
         moveit_msgs::CollisionObject box = obj;
         box.header.seq = 0;
         box.header.stamp = ros::Time::now();
-        box.primitive_poses.front().position.x = m_pos.x;
-        box.primitive_poses.front().position.y = m_pos.y;
-        box.primitive_poses.front().position.z = m_pos.z;
-        box.primitives.clear();
+        box.header.frame_id = "odom_combined";
+        box.mesh_poses.front() = m_pose;
+        box.meshes.clear();
         box.operation = moveit_msgs::CollisionObject::MOVE;
-        ROS_INFO("Moving box '%s' in frame '%s'", box.id.c_str(), box.header.frame_id.c_str());
+        ROS_INFO("Moving mesh '%s' in frame '%s'", box.id.c_str(), box.header.frame_id.c_str());
         m_collision_object_pub.publish(box);
         ros::Duration(1.0).sleep();
     }
@@ -222,27 +275,35 @@ private:
 int main(int argc, char* argv[])
 {
     // x, y, z, length, width, height
-    if (argc < 6) {
-        fprintf(stderr, "Usage: sync_mesh <x> <y> <z> <resource> <name>\n");
+    if (argc < 10) {
+        fprintf(stderr, "Usage: sync_mesh <name> <resource> <x> <y> <z> <r> <p> <y> <scale>\n");
         return 1;
     }
 
-    double pos_x = std::stod(argv[1]);
-    double pos_y = std::stod(argv[2]);
-    double pos_z = std::stod(argv[3]);
-    std::string mesh_resource(argv[4]);
-    std::string mesh_name(argv[5]);
+    std::string mesh_name(argv[1]);
+    std::string mesh_resource(argv[2]);
+    double pos_x =      std::stod(argv[3]);
+    double pos_y =      std::stod(argv[4]);
+    double pos_z =      std::stod(argv[5]);
+    double pose_roll =  std::stod(argv[6]);
+    double pose_pitch = std::stod(argv[7]);
+    double pose_yaw =   std::stod(argv[8]);
+    double scale =      std::stod(argv[9]);
+
+    Eigen::Affine3d transform;
+    transform = Eigen::Translation3d(pos_x, pos_y, pos_z) *
+        Eigen::AngleAxisd(pose_yaw, Eigen::Vector3d(0.0, 0.0, 1.0)) *
+        Eigen::AngleAxisd(pose_pitch, Eigen::Vector3d(0.0, 1.0, 0.0)) *
+        Eigen::AngleAxisd(pose_roll, Eigen::Vector3d(1.0, 0.0, 0.0));
 
     ros::init(argc, argv, "add_table");
     ros::NodeHandle nh;
 
-    geometry_msgs::Point pos;
-    pos.x = pos_x;
-    pos.y = pos_y;
-    pos.z = pos_z;
+    geometry_msgs::Pose pose;
+    tf::poseEigenToMsg(transform, pose);
 
     MeshSynchronizer synchronizer;
-    if (!synchronizer.init(mesh_name, mesh_resource, pos)) {
+    if (!synchronizer.init(mesh_name, mesh_resource, pose, scale)) {
         ROS_ERROR("Failed to initialize mesh synchronizer");
         return 1;
     }
