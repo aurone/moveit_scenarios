@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+rosrun moveit_tests sync_mesh bookshelf package://moveit_tests/meshes/bookshelf/bookshelf.stl 0.95 0.0 0.0 0.0 0.0 0.0 1.0
