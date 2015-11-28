@@ -7,12 +7,15 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 find_package(
     catkin REQUIRED
         cmake_modules
+        leatherman
         moveit_core
         moveit_msgs
         moveit_ros_move_group
         moveit_ros_planning
         moveit_ros_planning_interface
-        roscpp)
+        roscpp
+        sbpl_geometry_utils
+        visualization_msgs)
 find_package(Eigen REQUIRED)
 
 catkin_package()
@@ -28,3 +31,6 @@ target_link_libraries(sync_mesh ${catkin_LIBRARIES})
 
 add_executable(distance_field_test src/distance_field_test.cpp)
 target_link_libraries(distance_field_test ${catkin_LIBRARIES})
+
+add_executable(sample_birdhouse_goals src/sample_birdhouse_goals.cpp)
+target_link_libraries(sample_birdhouse_goals ${catkin_LIBRARIES})

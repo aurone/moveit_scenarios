@@ -1,10 +1,10 @@
 <launch>
     <node name="sync_turntable_base" pkg="moveit_tests" type="sync_mesh"
-            args="turntable_base package://moveit_tests/meshes/turntable/turntable_base_with_texture.dae 0.66 0.0 0.61 0.0 0.0 0.0 0.0000254"/>
+            args="turntable_base package://moveit_tests/meshes/turntable/turntable_base_with_texture.dae 0.76 0.05 0.61 0.0 0.0 0.0 0.0000254"/>
 
     <!-- Ensure the rotating surface is 5.625cm above the turntable base -->
     <node name="sync_turntable_rotating_surface" pkg="moveit_tests" type="sync_mesh"
-            args="turntable_rotating_surface package://moveit_tests/meshes/turntable/turntable_rotating_surface_with_texture.dae 0.66 0.0 0.71625 0.0 0.0 0.0 0.00002544"/>
+            args="turntable_rotating_surface package://moveit_tests/meshes/turntable/turntable_rotating_surface_with_texture.dae 0.76 0.05 0.71625 0.0 0.0 0.0 0.00002544"/>
 
     <!-- NOTE: Ensure the suction cup is 11cm above the rotating surface -->
     <!-- I can't seem to find this guy in RViz so it must be small enough to not matter
@@ -12,10 +12,15 @@
             args="turntable_suction_cup package://moveit_tests/meshes/turntable/turntable_suction_cup.dae 0.66 0.0 0.1 0.0 0.0 0.0 0.0000254"/>
     -->
 
+    <!--
     <node name="sync_top_inventory_tabletop" pkg="moveit_tests" type="sync_box"
-            args="0.63 0.95 0.83 0.6 0.76 0.04 top_inventory_tabletop"/>
+            args="0.73 0.95 0.83 0.6 0.76 0.04 top_inventory_tabletop"/>
     <node name="sync_inventory_tabletop" pkg="moveit_tests" type="sync_box"
-            args="0.34 0.915 0.69 0.92 0.76 0.04 inventory_tabletop"/>
+            args="0.44 0.915 0.69 0.92 0.76 0.04 inventory_tabletop"/>
+    -->
     <node name="sync_worktable" pkg="moveit_tests" type="sync_box"
-            args="0.58 0.04 0.30 0.41 0.61 0.62 worktable"/>
+            args="0.68 0.04 0.30 0.61 0.41 0.62 worktable"/>
+
+    <node name="sync_birdhouse" pkg="moveit_tests" type="sync_box"
+            args="0.66 0.05 0.81 0.14 0.14 0.14"/>
 </launch>
