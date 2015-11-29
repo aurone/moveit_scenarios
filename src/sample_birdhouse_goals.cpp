@@ -18,7 +18,8 @@
 #include <visualization_msgs/Marker.h>
 
 std::vector<geometry_msgs::Pose> SampleBirdhouseGoalPoses(
-    const geometry_msgs::Vector3& sizes);
+    const geometry_msgs::Vector3& sizes,
+    double padding);
 
 bool ExportGoals(const std::vector<geometry_msgs::Pose>& poses);
 
@@ -26,7 +27,8 @@ bool ExportGoals(const std::vector<geometry_msgs::Pose>& poses);
 // on the surface of the bounding box with orientations pointing inward along
 // the surface normal.
 std::vector<geometry_msgs::Pose> SampleBirdhouseGoalPoses(
-    const geometry_msgs::Vector3& sizes)
+    const geometry_msgs::Vector3& sizes,
+    double padding)
 {
     double front_x = 0.5 * sizes.x;
     double back_x = -0.5 * sizes.x;
@@ -76,27 +78,27 @@ std::vector<geometry_msgs::Pose> SampleBirdhouseGoalPoses(
     p.orientation.y = q.y();
     p.orientation.z = q.z();
 
-    p.position.x = front_x;
+    p.position.x = front_x + padding;
     p.position.y = right_y;
     p.position.z = top_z;
     poses.push_back(p);
 
-    p.position.x = front_x;
+    p.position.x = front_x + padding;
     p.position.y = right_y;
     p.position.z = bottom_z;
     poses.push_back(p);
 
-    p.position.x = front_x;
+    p.position.x = front_x + padding;
     p.position.y = left_y;
     p.position.z = bottom_z;
     poses.push_back(p);
 
-    p.position.x = front_x;
+    p.position.x = front_x + padding;
     p.position.y = left_y;
     p.position.z = top_z;
     poses.push_back(p);
 
-    p.position.x = front_x;
+    p.position.x = front_x + padding;
     p.position.y = 0.0;
     p.position.z = 0.0;
     poses.push_back(p);
@@ -111,27 +113,27 @@ std::vector<geometry_msgs::Pose> SampleBirdhouseGoalPoses(
     p.orientation.y = q.y();
     p.orientation.z = q.z();
 
-    p.position.y = right_y;
+    p.position.y = right_y + padding;
     p.position.x = front_x;
     p.position.z = top_z;
     poses.push_back(p);
 
-    p.position.y = right_y;
+    p.position.y = right_y + padding;
     p.position.x = front_x;
     p.position.z = bottom_z;
     poses.push_back(p);
 
-    p.position.y = right_y;
+    p.position.y = right_y + padding;
     p.position.x = back_x;
     p.position.z = bottom_z;
     poses.push_back(p);
 
-    p.position.y = right_y;
+    p.position.y = right_y + padding;
     p.position.x = back_x;
     p.position.z = top_z;
     poses.push_back(p);
 
-    p.position.y = right_y;
+    p.position.y = right_y + padding;
     p.position.x = 0.0;
     p.position.z = 0.0;
     poses.push_back(p);
@@ -146,27 +148,27 @@ std::vector<geometry_msgs::Pose> SampleBirdhouseGoalPoses(
     p.orientation.y = q.y();
     p.orientation.z = q.z();
 
-    p.position.z = top_z;
+    p.position.z = top_z + padding;
     p.position.x = front_x;
     p.position.y = right_y;
     poses.push_back(p);
 
-    p.position.z = top_z;
+    p.position.z = top_z + padding;
     p.position.x = front_x;
     p.position.y = left_y;
     poses.push_back(p);
 
-    p.position.z = top_z;
+    p.position.z = top_z + padding;
     p.position.x = back_x;
     p.position.y = left_y;
     poses.push_back(p);
 
-    p.position.z = top_z;
+    p.position.z = top_z + padding;
     p.position.x = back_x;
     p.position.y = right_y;
     poses.push_back(p);
 
-    p.position.z = top_z;
+    p.position.z = top_z + padding;
     p.position.x = 0.0;
     p.position.y = 0.0;
     poses.push_back(p);
@@ -317,11 +319,7 @@ bool BirdhouseTestSuite::init()
     ////////////////////////////////////////
 
     std::vector<geometry_msgs::Pose> bh_samples;
-    geometry_msgs::Vector3 birdhouse_size_inflated = m_birdhouse_size;
-    birdhouse_size_inflated.x += m_birdhouse_padding;
-    birdhouse_size_inflated.y += m_birdhouse_padding;
-    birdhouse_size_inflated.z += m_birdhouse_padding;
-    bh_samples = SampleBirdhouseGoalPoses(birdhouse_size_inflated);
+    bh_samples = SampleBirdhouseGoalPoses(m_birdhouse_size, m_birdhouse_padding);
 
     ROS_INFO("Birdhouse goals:");
     for (size_t i = 0; i < bh_samples.size(); ++i) {
