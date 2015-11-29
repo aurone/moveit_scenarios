@@ -23,7 +23,8 @@
 
 std::vector<geometry_msgs::Pose> SampleBirdhouseGoalPoses(
     const geometry_msgs::Vector3& sizes,
-    double padding);
+    double padding,
+    int levels = 1);
 
 bool ExportGoals(const std::vector<geometry_msgs::Pose>& poses);
 
@@ -70,6 +71,16 @@ private:
     std::string m_goals_filename;
     std::vector<std::vector<double>> m_goal_joint_states;
     double m_success_planning_time_total;
+
+    struct TestResult
+    {
+        std::vector<double> start;
+        std::vector<double> goal;
+        bool success;
+        double planning_time;
+    };
+
+    std::vector<TestResult> m_results;
     ///@}
 
     bool initGeneral();
@@ -93,6 +104,8 @@ private:
     void fillWorkspaceParameters(
         moveit_msgs::MotionPlanRequest& req,
         const ros::Time& when) const;
+
+    bool exportResults() const;
 };
 
 #endif

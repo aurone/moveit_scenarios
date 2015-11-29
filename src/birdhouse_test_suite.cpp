@@ -7,7 +7,8 @@
 // the surface normal.
 std::vector<geometry_msgs::Pose> SampleBirdhouseGoalPoses(
     const geometry_msgs::Vector3& sizes,
-    double padding)
+    double padding,
+    int levels)
 {
     double front_x = 0.5 * sizes.x;
     double back_x = -0.5 * sizes.x;
@@ -15,6 +16,12 @@ std::vector<geometry_msgs::Pose> SampleBirdhouseGoalPoses(
     double left_y = -0.5 * sizes.y;
     double top_z = 0.5 * sizes.z;
     double bottom_z = -0.5 * sizes.z;
+
+    double res_x = sizes.x / pow(2.0, levels - 1);
+    double res_y = sizes.y / pow(2.0, levels - 1);
+    double res_z = sizes.z / pow(2.0, levels - 1);
+
+    const int dim_sample_count = (int)round(pow(2.0, levels - 1)) + 1;
 
     Eigen::Vector3d front_inward_normal(-1.0, 0.0, 0.0);
     Eigen::Vector3d right_inward_normal(0.0, -1.0, 0.0);
@@ -58,29 +65,13 @@ std::vector<geometry_msgs::Pose> SampleBirdhouseGoalPoses(
     p.orientation.z = q.z();
 
     p.position.x = front_x + padding;
-    p.position.y = right_y;
-    p.position.z = top_z;
-    poses.push_back(p);
-
-    p.position.x = front_x + padding;
-    p.position.y = right_y;
-    p.position.z = bottom_z;
-    poses.push_back(p);
-
-    p.position.x = front_x + padding;
-    p.position.y = left_y;
-    p.position.z = bottom_z;
-    poses.push_back(p);
-
-    p.position.x = front_x + padding;
-    p.position.y = left_y;
-    p.position.z = top_z;
-    poses.push_back(p);
-
-    p.position.x = front_x + padding;
-    p.position.y = 0.0;
-    p.position.z = 0.0;
-    poses.push_back(p);
+    for (int y = 0; y < dim_sample_count; ++y) {
+        for (int z = 0; z < dim_sample_count; ++z) {
+            p.position.y = left_y + y * res_y;
+            p.position.z = bottom_z + z * res_z;
+            poses.push_back(p);
+        }
+    }
 
     //////////////////////////////////////
     // compute poses for the right face //
@@ -93,29 +84,13 @@ std::vector<geometry_msgs::Pose> SampleBirdhouseGoalPoses(
     p.orientation.z = q.z();
 
     p.position.y = right_y + padding;
-    p.position.x = front_x;
-    p.position.z = top_z;
-    poses.push_back(p);
-
-    p.position.y = right_y + padding;
-    p.position.x = front_x;
-    p.position.z = bottom_z;
-    poses.push_back(p);
-
-    p.position.y = right_y + padding;
-    p.position.x = back_x;
-    p.position.z = bottom_z;
-    poses.push_back(p);
-
-    p.position.y = right_y + padding;
-    p.position.x = back_x;
-    p.position.z = top_z;
-    poses.push_back(p);
-
-    p.position.y = right_y + padding;
-    p.position.x = 0.0;
-    p.position.z = 0.0;
-    poses.push_back(p);
+    for (int x = 0; x < dim_sample_count; ++x) {
+        for (int z = 0; z < dim_sample_count; ++z) {
+            p.position.x = back_x + x * res_x;
+            p.position.z = bottom_z + z * res_z;
+            poses.push_back(p);
+        }
+    }
 
     ////////////////////////////////////
     // compute poses for the top face //
@@ -128,29 +103,13 @@ std::vector<geometry_msgs::Pose> SampleBirdhouseGoalPoses(
     p.orientation.z = q.z();
 
     p.position.z = top_z + padding;
-    p.position.x = front_x;
-    p.position.y = right_y;
-    poses.push_back(p);
-
-    p.position.z = top_z + padding;
-    p.position.x = front_x;
-    p.position.y = left_y;
-    poses.push_back(p);
-
-    p.position.z = top_z + padding;
-    p.position.x = back_x;
-    p.position.y = left_y;
-    poses.push_back(p);
-
-    p.position.z = top_z + padding;
-    p.position.x = back_x;
-    p.position.y = right_y;
-    poses.push_back(p);
-
-    p.position.z = top_z + padding;
-    p.position.x = 0.0;
-    p.position.y = 0.0;
-    poses.push_back(p);
+    for (int x = 0; x < dim_sample_count; ++x) {
+        for (int y = 0; y < dim_sample_count; ++y) {
+            p.position.x = back_x + x * res_x;
+            p.position.y = left_y + y * res_y;
+            poses.push_back(p);
+        }
+    }
 
     return poses;
 }
@@ -268,6 +227,11 @@ bool BirdhouseTestSuite::initPrecachedGoalsSequence()
 
     ROS_INFO("Loaded %zu joint states", m_goal_joint_states.size());
 
+    int max_samples = 15;
+    std::shuffle(m_goal_joint_states.begin(), m_goal_joint_states.end(), std::minstd_rand());
+    m_goal_joint_states.resize(max_samples);
+    ROS_INFO("Truncated to %zu samples", m_goal_joint_states.size());
+
     return true;
 }
 
@@ -309,6 +273,7 @@ bool BirdhouseTestSuite::initGenerateGoalsSequence()
     double birdhouse_pitch;
     double birdhouse_yaw;
     double birdhouse_padding;
+    int birdhouse_sample_levels;
 
     if (!m_ph.getParam("birdhouse_x", birdhouse_x) ||
         !m_ph.getParam("birdhouse_y", birdhouse_y) ||
@@ -319,7 +284,8 @@ bool BirdhouseTestSuite::initGenerateGoalsSequence()
         !m_ph.getParam("birdhouse_length", birdhouse_length) ||
         !m_ph.getParam("birdhouse_width", birdhouse_width) ||
         !m_ph.getParam("birdhouse_height", birdhouse_height) ||
-        !m_ph.getParam("birdhouse_padding", birdhouse_padding))
+        !m_ph.getParam("birdhouse_padding", birdhouse_padding) ||
+        !m_ph.getParam("birdhouse_sample_levels", birdhouse_sample_levels))
     {
         ROS_ERROR("Failed to retrieve birdhouse parameters from the param server");
         return false;
@@ -344,7 +310,7 @@ bool BirdhouseTestSuite::initGenerateGoalsSequence()
     ////////////////////////////////////////
 
     std::vector<geometry_msgs::Pose> bh_samples;
-    bh_samples = SampleBirdhouseGoalPoses(m_birdhouse_size, m_birdhouse_padding);
+    bh_samples = SampleBirdhouseGoalPoses(m_birdhouse_size, m_birdhouse_padding, birdhouse_sample_levels);
 
     ROS_INFO("Birdhouse goals:");
     for (size_t i = 0; i < bh_samples.size(); ++i) {
@@ -412,6 +378,12 @@ int BirdhouseTestSuite::runPrecachedGoalsSequence()
             num_trials,
             m_success_planning_time_total,
             succ_count == 0 ? 0.0 : m_success_planning_time_total / succ_count);
+
+    if (!exportResults()) {
+        ROS_ERROR("Failed to export results");
+        return 1;
+    }
+
     return 0;
 }
 
@@ -795,20 +767,41 @@ bool BirdhouseTestSuite::planBetweenPoints(
     // plan //
     //////////
 
+    const moveit_msgs::MotionPlanResponse& response =
+            srv.response.motion_plan_response;
+
     if (!m_plan_path_client.call(srv)) {
         ROS_ERROR("Failed to call 'plan_kinematic_path' service");
+
+        TestResult result;
+        result.start = start_state;
+        result.goal = goal_state;
+        result.success = false;
+        result.planning_time = response.planning_time;
+        m_results.push_back(result);
         return false;
     }
 
-    const moveit_msgs::MotionPlanResponse& response = srv.response.motion_plan_response;
 
     if (response.error_code.val == moveit_msgs::MoveItErrorCodes::SUCCESS) {
         m_success_planning_time_total += response.planning_time;
         ROS_INFO("Plan path succeeded in %0.3f seconds", response.planning_time);
+        TestResult result;
+        result.start = start_state;
+        result.goal = goal_state;
+        result.success = true;
+        result.planning_time = response.planning_time;
+        m_results.push_back(result);
         return true;
     }
 
     ROS_ERROR("Plan path failed");
+    TestResult result;
+    result.start = start_state;
+    result.goal = goal_state;
+    result.success = false;
+    result.planning_time = response.planning_time;
+    m_results.push_back(result);
     return false;
 }
 
@@ -825,4 +818,30 @@ void BirdhouseTestSuite::fillWorkspaceParameters(
     req.workspace_parameters.max_corner.x = 1.5;
     req.workspace_parameters.max_corner.y = 1.2;
     req.workspace_parameters.max_corner.z = 1.0;
+}
+
+bool BirdhouseTestSuite::exportResults() const
+{
+    FILE* f = fopen("results.csv", "w");
+    if (!f) {
+        return false;
+    }
+
+    for (const auto& result : m_results) {
+        const auto& start = result.start;
+        const auto& goal = result.goal;
+        fprintf(stdout, "%d %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf\n",
+            result.success ? 1 : 0,
+            result.planning_time,
+            start[0], start[1], start[2], start[3], start[4], start[5], start[6],
+            goal[0], goal[1], goal[2], goal[3], goal[4], goal[5], goal[6]);
+        fprintf(f, "%d %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf\n",
+            result.success ? 1 : 0,
+            result.planning_time,
+            start[0], start[1], start[2], start[3], start[4], start[5], start[6],
+            goal[0], goal[1], goal[2], goal[3], goal[4], goal[5], goal[6]);
+    }
+
+    fclose(f);
+    return true;
 }
