@@ -14,6 +14,7 @@ find_package(
         moveit_ros_planning
         moveit_ros_planning_interface
         roscpp
+        sbpl_manipulation
         sbpl_geometry_utils
         visualization_msgs)
 find_package(Eigen REQUIRED)
@@ -34,3 +35,6 @@ target_link_libraries(distance_field_test ${catkin_LIBRARIES})
 
 add_executable(sample_birdhouse_goals src/sample_birdhouse_goals.cpp)
 target_link_libraries(sample_birdhouse_goals ${catkin_LIBRARIES})
+
+add_executable(compute_torque_manifold src/compute_torque_manifold.cpp)
+target_link_libraries(compute_torque_manifold ${catkin_LIBRARIES})
