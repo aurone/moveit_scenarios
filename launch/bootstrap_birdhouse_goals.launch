@@ -1,6 +1,6 @@
 <launch>
     <node name="sample_birdhouse_goals" pkg="moveit_tests" type="sample_birdhouse_goals">
-        <param name="precached_goals" value="true"/>
+        <param name="precached_goals" value="false"/>
 
         <!-- Determine feasible start and goal states around a birdhouse -->
         <param name="birdhouse_x" value="0.66"/>

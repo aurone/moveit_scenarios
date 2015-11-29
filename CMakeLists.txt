@@ -33,7 +33,10 @@ target_link_libraries(sync_mesh ${catkin_LIBRARIES})
 add_executable(distance_field_test src/distance_field_test.cpp)
 target_link_libraries(distance_field_test ${catkin_LIBRARIES})
 
-add_executable(sample_birdhouse_goals src/sample_birdhouse_goals.cpp)
+add_executable(
+    sample_birdhouse_goals
+    src/sample_birdhouse_goals.cpp
+    src/birdhouse_test_suite.cpp)
 target_link_libraries(sample_birdhouse_goals ${catkin_LIBRARIES})
 
 add_executable(compute_torque_manifold src/compute_torque_manifold.cpp)
