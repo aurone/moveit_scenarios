@@ -757,7 +757,7 @@ bool BirdhouseTestSuite::planBetweenPoints(
     // the rest //
     //////////////
 
-    req.planner_id = "ARA*";
+    req.planner_id = "MHA*";
     req.group_name = "right_arm";
     req.num_planning_attempts = 1;
     req.allowed_planning_time = 10.0;
