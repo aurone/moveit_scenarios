@@ -227,9 +227,9 @@ bool BirdhouseTestSuite::initPrecachedGoalsSequence()
 
     ROS_INFO("Loaded %zu joint states", m_goal_joint_states.size());
 
-    int max_samples = 15;
+    size_t max_samples = 15;
     std::shuffle(m_goal_joint_states.begin(), m_goal_joint_states.end(), std::minstd_rand());
-    m_goal_joint_states.resize(max_samples);
+    m_goal_joint_states.resize(std::min(max_samples, m_goal_joint_states.size()));
     ROS_INFO("Truncated to %zu samples", m_goal_joint_states.size());
 
     return true;
