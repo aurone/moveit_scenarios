@@ -13,9 +13,7 @@
         <param name="birdhouse_width" value="0.14"/>
         <param name="birdhouse_height" value="0.14"/>
         <param name="birdhouse_padding" value="0.08"/>
+        <param name="birdhouse_sample_levels" value="3"/>
         <param name="right_arm_initial_state" value="-49 24.27 -70 -105.07 -51 -35.73 0"/>
-
-        <!-- Plan to and from all start/goal pairs in the goals file -->
-        <param name="goals_filename" value="$(find moveit_tests)/data/goals.csv"/>
     </node>
 </launch>

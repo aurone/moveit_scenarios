@@ -2,20 +2,7 @@
     <node name="sample_birdhouse_goals" pkg="moveit_tests" type="sample_birdhouse_goals">
         <param name="precached_goals" value="true"/>
 
-        <!-- Determine feasible start and goal states around a birdhouse -->
-        <param name="birdhouse_x" value="0.66"/>
-        <param name="birdhouse_y" value="0.05"/>
-        <param name="birdhouse_z" value="0.81"/>
-        <param name="birdhouse_roll" value="0.0"/>
-        <param name="birdhouse_pitch" value="0.0"/>
-        <param name="birdhouse_yaw" value="3.1415"/>
-        <param name="birdhouse_length" value="0.14"/>
-        <param name="birdhouse_width" value="0.14"/>
-        <param name="birdhouse_height" value="0.14"/>
-        <param name="birdhouse_padding" value="0.08"/>
-        <param name="right_arm_initial_state" value="-49 24.27 -70 -105.07 -51 -35.73 0"/>
-
         <!-- Plan to and from all start/goal pairs in the goals file -->
-        <param name="goals_filename" value="$(find moveit_tests)/data/goals.csv"/>
+        <param name="goals_filename" value="$(find moveit_tests)/data/goals_3lev.csv"/>
     </node>
 </launch>
