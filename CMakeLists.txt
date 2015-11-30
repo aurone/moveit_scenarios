@@ -41,3 +41,5 @@ target_link_libraries(sample_birdhouse_goals ${catkin_LIBRARIES})
 
 add_executable(compute_torque_manifold src/compute_torque_manifold.cpp)
 target_link_libraries(compute_torque_manifold ${catkin_LIBRARIES})
+
+add_executable(torque_manifold_bb src/torque_manifold_bb.cpp)

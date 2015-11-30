@@ -158,7 +158,7 @@ int RightArmTorqueManifold::run()
 
     m_df->addPointsToField(points);
 
-//    exportPoints(points);
+    exportPoints(points);
 
     visualization_msgs::MarkerArray ma = m_df->getOccupiedVoxelsVisualization();
     for (auto& marker : ma.markers) {
@@ -192,14 +192,25 @@ int main(int argc, char* argv[])
     ros::init(argc, argv, "compute_torque_manifold");
     ros::NodeHandle nh;
 
-    const double ox = 0.0; //-0.4;
-    const double oy = -1.2;
-    const double oz = -2.0;
-    const double size_x = 1.5 - ox;
-    const double size_y = 1.2 - oy;
-    const double size_z = 1.0 - oz;
+//    const double ox = 0.0; //-0.4;
+//    const double oy = -1.2;
+//    const double oz = -2.0;
+//    const double size_x = 1.5 - ox;
+//    const double size_y = 1.2 - oy;
+//    const double size_z = 1.0 - oz;
 
-    const double res = 0.10;
+    const double old_res = 0.1;
+    const double ox = 0.0 - old_res;
+    const double oy = -1.1 - old_res;
+    const double oz = -0.5 - old_res;
+    const double mx = 0.8 + old_res;
+    const double my = 0.3 + old_res;
+    const double mz = 0.4 + old_res;
+    const double size_x = mx - ox;
+    const double size_y = my - oy;
+    const double size_z = mz - oz;
+
+    const double res = 0.02;
     const double weight_lbs = 10.0;
 
     RightArmTorqueManifold m;
