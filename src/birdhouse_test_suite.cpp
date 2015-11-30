@@ -364,6 +364,8 @@ int BirdhouseTestSuite::runPrecachedGoalsSequence()
 
             ++num_trials;
 
+            ROS_INFO("Trial %d of %zu", num_trials, m_goal_joint_states.size() * m_goal_joint_states.size() - 1);
+
             const std::vector<double>& start_state = m_goal_joint_states[i];
             const std::vector<double>& goal_state = m_goal_joint_states[j];
 
