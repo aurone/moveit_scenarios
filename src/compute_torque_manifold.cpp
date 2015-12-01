@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <memory>
 #include <eigen_conversions/eigen_msg.h>
+#include <leatherman/viz.h>
 #include <moveit/distance_field/propagation_distance_field.h>
 #include <moveit/robot_model_loader/robot_model_loader.h>
 #include <moveit/robot_model/robot_model.h>
@@ -93,11 +94,12 @@ int RightArmTorqueManifold::run()
 
     int num_cells = gxc * gyc * gzc;
     int i = 0;
+    int ik_failure_count = 0;
     for (int gx = 0; gx < gxc; ++gx) {
         for (int gy = 0; gy < gyc; ++gy) {
             for (int gz = 0; gz < gzc; ++gz) {
                 if (i % (num_cells / 100) == 0) {
-                    ROS_INFO("%d/%d (%0.3f%%): %zu points", i, num_cells, 100.0 * (double)i / num_cells, points.size());
+                    ROS_INFO("%d/%d (%0.3f%%): %zu points, %d ik failures", i, num_cells, 100.0 * (double)i / num_cells, points.size(), ik_failure_count);
                 }
                 i++;
 
@@ -105,20 +107,30 @@ int RightArmTorqueManifold::run()
                 double wx, wy, wz;
                 m_df->gridToWorld(gx, gy, gz, wx, wy, wz);
 
+
                 // TODO: sample various orientations here? assume identity rot
                 // in the torso_lift_link frame for now
 
                 // transform this point into the model frame
+                const double yaw = atan2(wy + 0.188, wx);
+//                ROS_INFO("wx = %0.3f, wy = %0.3f yaw = %0.3f", wx, wy + 0.188, yaw);
                 const Eigen::Affine3d T_model_point(
-                        T_model_torso * Eigen::Translation3d(wx, wy, wz));
+                        T_model_torso *
+                        Eigen::Translation3d(wx, wy, wz) *
+                        // note: atan2(x, y) instead of atan2(y, x) here
+                        Eigen::AngleAxisd(yaw, Eigen::Vector3d::UnitZ()));
 
                 // convert to pose...
                 geometry_msgs::Pose pose_point_model;
                 tf::poseEigenToMsg(T_model_point, pose_point_model);
 
+                m_torque_manifold_pub.publish(viz::getPoseMarkerArray(
+                        pose_point_model, "odom_combined", "torque_pose"));
+
                 // run ik to this point to get a goal pose
                 if (!m_robot_state->setFromIK(right_arm, pose_point_model)) {
 //                    ROS_ERROR("Failed to compute IK");
+                    ++ik_failure_count;
                     continue;
                 }
 
@@ -156,6 +168,8 @@ int RightArmTorqueManifold::run()
         }
     }
 
+    ROS_INFO("%d/%d ik failures", ik_failure_count, gxc * gyc * gzc);
+
     m_df->addPointsToField(points);
 
     exportPoints(points);
@@ -163,6 +177,7 @@ int RightArmTorqueManifold::run()
     visualization_msgs::MarkerArray ma = m_df->getOccupiedVoxelsVisualization();
     for (auto& marker : ma.markers) {
         marker.ns = "torque_manifold";
+        marker.color.a = 0.7;
     }
     m_torque_manifold_pub.publish(ma);
 
