@@ -404,6 +404,8 @@ int BirdhouseTestSuite::runGenerateGoalsSequence()
     m_robot_state->setVariablePosition("r_wrist_flex_joint", m_right_arm_initial_state[5]);
     m_robot_state->setVariablePosition("r_wrist_roll_joint", m_right_arm_initial_state[6]);
 
+    std::vector<geometry_msgs::Pose> success_goals;
+
     size_t success_count = 0;
     for (size_t i = 0; i < m_wrist_goals.size(); ++i) {
         ROS_INFO("Sending goal %zu/%zu", i, m_wrist_goals.size());
@@ -413,8 +415,13 @@ int BirdhouseTestSuite::runGenerateGoalsSequence()
         ros::spinOnce();
         if (planToGoal(wrist_goal)) {
             ++success_count;
+            success_goals.push_back(wrist_goal);
         }
     }
+
+    visualization_msgs::MarkerArray goal_markers =
+        viz::getPosesMarkerArray(success_goals, m_robot_model->getModelFrame(), "birdhouse_goals", 0, false);
+        m_goal_marker_pub.publish(goal_markers);
 
     ROS_WARN("%zu/%zu succeeded", success_count, m_wrist_goals.size());
     if (!exportValidGoals()) {
@@ -829,19 +836,23 @@ bool BirdhouseTestSuite::exportResults() const
         return false;
     }
 
+    int id = 0;
     for (const auto& result : m_results) {
         const auto& start = result.start;
         const auto& goal = result.goal;
-        fprintf(stdout, "%d %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf\n",
+        fprintf(stdout, "%d %d %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf\n",
+            id,
             result.success ? 1 : 0,
             result.planning_time,
             start[0], start[1], start[2], start[3], start[4], start[5], start[6],
             goal[0], goal[1], goal[2], goal[3], goal[4], goal[5], goal[6]);
-        fprintf(f, "%d %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf\n",
+        fprintf(f, "%d %d %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf\n",
+            id,
             result.success ? 1 : 0,
             result.planning_time,
             start[0], start[1], start[2], start[3], start[4], start[5], start[6],
             goal[0], goal[1], goal[2], goal[3], goal[4], goal[5], goal[6]);
+        ++id;
     }
 
     fclose(f);

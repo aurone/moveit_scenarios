@@ -177,7 +177,7 @@ int RightArmTorqueManifold::run()
     visualization_msgs::MarkerArray ma = m_df->getOccupiedVoxelsVisualization();
     for (auto& marker : ma.markers) {
         marker.ns = "torque_manifold";
-        marker.color.a = 0.7;
+        marker.color.a = 1.0;
     }
     m_torque_manifold_pub.publish(ma);
 
