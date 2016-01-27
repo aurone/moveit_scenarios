@@ -1,4 +1,4 @@
 <launch>
     <node name="sync_bookshelf" pkg="moveit_tests" type="sync_mesh"
-            args="bookshelf package://moveit_tests/meshes/bookshelf/bookshelf.stl 1 0 -0.7 0 0 0 1.0"/>
+            args="bookshelf package://moveit_tests/meshes/bookshelf/bookshelf.stl 1 0 -0.7 0 0 0 1.0 world"/>
 </launch>

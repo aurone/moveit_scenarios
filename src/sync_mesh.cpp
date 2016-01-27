@@ -36,7 +36,7 @@ public:
     bool init(
         const std::string& name,
         const std::string& fname,
-        const geometry_msgs::Pose& pose,
+        const geometry_msgs::PoseStamped& pose,
         double scale = 1.0)
     {
         shapes::Mesh* mesh = shapes::createMeshFromResource(fname);
@@ -48,7 +48,8 @@ public:
         m_name = name;
         m_fname = fname;
         m_mesh = mesh;
-        m_pose = pose;
+        m_frame = pose.header.frame_id;
+        m_pose = pose.pose;
         m_scale = scale;
         m_mesh_sig = getMeshSignature();
         return true;
@@ -109,6 +110,7 @@ private:
     shapes::Mesh* m_mesh;
     double m_mesh_sig;
 
+    std::string m_frame;
     geometry_msgs::Pose m_pose;
 
     double m_scale;
@@ -211,7 +213,7 @@ private:
         moveit_msgs::CollisionObject mesh_object;
         mesh_object.header.seq = 0;
         mesh_object.header.stamp = ros::Time::now();
-        mesh_object.header.frame_id = "odom_combined";
+        mesh_object.header.frame_id = m_frame;
         mesh_object.id = m_name;
 
         shape_msgs::Mesh mesh;
@@ -247,7 +249,7 @@ private:
     {
         moveit_msgs::CollisionObject box_object;
         box_object.header.stamp = ros::Time::now();
-        box_object.header.frame_id = "odom_combined";
+        box_object.header.frame_id = m_frame;
         box_object.id = m_name;
         box_object.operation = moveit_msgs::CollisionObject::REMOVE;
         ROS_INFO("Removing mesh '%s'", m_name.c_str());
@@ -260,7 +262,7 @@ private:
         moveit_msgs::CollisionObject box = obj;
         box.header.seq = 0;
         box.header.stamp = ros::Time::now();
-        box.header.frame_id = "odom_combined";
+        box.header.frame_id = m_frame;
         box.mesh_poses.front() = m_pose;
         box.meshes.clear();
         box.operation = moveit_msgs::CollisionObject::MOVE;
@@ -275,7 +277,7 @@ private:
 int main(int argc, char* argv[])
 {
     // x, y, z, length, width, height
-    if (argc < 10) {
+    if (argc < 11) {
         fprintf(stderr, "Usage: sync_mesh <name> <resource> <x> <y> <z> <r> <p> <y> <scale>\n");
         return 1;
     }
@@ -289,6 +291,7 @@ int main(int argc, char* argv[])
     double pose_pitch = std::stod(argv[7]);
     double pose_yaw =   std::stod(argv[8]);
     double scale =      std::stod(argv[9]);
+    std::string frame = argv[10];
 
     Eigen::Affine3d transform;
     transform = Eigen::Translation3d(pos_x, pos_y, pos_z) *
@@ -299,8 +302,9 @@ int main(int argc, char* argv[])
     ros::init(argc, argv, "add_table");
     ros::NodeHandle nh;
 
-    geometry_msgs::Pose pose;
-    tf::poseEigenToMsg(transform, pose);
+    geometry_msgs::PoseStamped pose;
+    pose.header.frame_id = frame;
+    tf::poseEigenToMsg(transform, pose.pose);
 
     MeshSynchronizer synchronizer;
     if (!synchronizer.init(mesh_name, mesh_resource, pose, scale)) {
