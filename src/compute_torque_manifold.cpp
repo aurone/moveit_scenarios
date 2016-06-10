@@ -1,14 +1,15 @@
 #include <stdio.h>
 #include <memory>
+
 #include <eigen_conversions/eigen_msg.h>
 #include <leatherman/viz.h>
 #include <moveit/distance_field/propagation_distance_field.h>
-#include <moveit/robot_model_loader/robot_model_loader.h>
 #include <moveit/robot_model/robot_model.h>
+#include <moveit/robot_model_loader/robot_model_loader.h>
 #include <moveit/robot_state/robot_state.h>
 #include <ros/ros.h>
+#include <sbpl_arm_planner/occupancy_grid.h>
 #include <visualization_msgs/MarkerArray.h>
-#include <sbpl_manipulation_components/occupancy_grid.h>
 
 namespace distance_field {
 typedef boost::shared_ptr<PropagationDistanceField> PropagationDistanceFieldPtr;
@@ -36,7 +37,7 @@ private:
     moveit::core::RobotModelPtr m_robot_model;
     moveit::core::RobotStatePtr m_robot_state;
 
-    std::shared_ptr<sbpl_arm_planner::OccupancyGrid> m_df;
+    sbpl::OccupancyGridPtr m_grid;
 
     double m_weight_lbs;
 
@@ -64,9 +65,9 @@ bool RightArmTorqueManifold::init(
     // instantiate a distance field in the "torso_lift_link" frame, for
     // visualization of the manifold
     double max_dist_m = 0.2;
-    m_df.reset(new sbpl_arm_planner::OccupancyGrid(
+    m_grid.reset(new sbpl::OccupancyGrid(
             size_x, size_y, size_z, res, origin_x, origin_y, origin_z, max_dist_m));
-    m_df->setReferenceFrame("torso_lift_link");
+    m_grid->setReferenceFrame("torso_lift_link");
 
     // initialize end effector weight
     m_weight_lbs = weight_lbs;
@@ -90,7 +91,7 @@ int RightArmTorqueManifold::run()
     std::vector<Eigen::Vector3d> points;
     // loop over all cells in the distance field
     int gxc, gyc, gzc;
-    m_df->getGridSize(gxc, gyc, gzc);
+    m_grid->getGridSize(gxc, gyc, gzc);
 
     int num_cells = gxc * gyc * gzc;
     int i = 0;
@@ -105,7 +106,7 @@ int RightArmTorqueManifold::run()
 
                 // get the world point in the torso_lift_link frame
                 double wx, wy, wz;
-                m_df->gridToWorld(gx, gy, gz, wx, wy, wz);
+                m_grid->gridToWorld(gx, gy, gz, wx, wy, wz);
 
 
                 // TODO: sample various orientations here? assume identity rot
@@ -170,11 +171,11 @@ int RightArmTorqueManifold::run()
 
     ROS_INFO("%d/%d ik failures", ik_failure_count, gxc * gyc * gzc);
 
-    m_df->addPointsToField(points);
+    m_grid->addPointsToField(points);
 
     exportPoints(points);
 
-    visualization_msgs::MarkerArray ma = m_df->getOccupiedVoxelsVisualization();
+    visualization_msgs::MarkerArray ma = m_grid->getOccupiedVoxelsVisualization();
     for (auto& marker : ma.markers) {
         marker.ns = "torque_manifold";
         marker.color.a = 1.0;

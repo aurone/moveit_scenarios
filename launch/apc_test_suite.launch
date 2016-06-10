@@ -1,0 +1,13 @@
+<launch>
+    <param name="target_point_offset_x" value="0.535"/>
+    <param name="target_point_offset_y" value="0.0"/>
+    <param name="target_point_offset_z" value="0.13"/>
+
+    <node name="apc_test_suite" pkg="moveit_tests" type="apc_test_suite">
+        <param name="dropoff_poses_filename" value="$(find moveit_tests)/data/apc/dropoff_pose_list.txt"/>
+        <param name="image_acquisition_poses_filename" value="$(find moveit_tests)/data/apc/image_acquisition_pose_list.txt"/>
+        <param name="localization_poses_filename" value="$(find moveit_tests)/data/apc/localization_pose_list.txt"/>
+        <param name="preposition_poses_filename" value="$(find moveit_tests)/data/apc/preposition_pose_list.txt"/>
+        <param name="withdraw_poses_filename" value="$(find moveit_tests)/data/apc/withdraw_poses.txt"/>
+    </node>
+</launch>

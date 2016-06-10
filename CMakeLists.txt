@@ -14,7 +14,7 @@ find_package(
         moveit_ros_planning
         moveit_ros_planning_interface
         roscpp
-        sbpl_manipulation
+        sbpl_arm_planner
         sbpl_geometry_utils
         visualization_msgs)
 find_package(Eigen REQUIRED)
@@ -43,3 +43,6 @@ add_executable(compute_torque_manifold src/compute_torque_manifold.cpp)
 target_link_libraries(compute_torque_manifold ${catkin_LIBRARIES})
 
 add_executable(torque_manifold_bb src/torque_manifold_bb.cpp)
+
+add_executable(apc_test_suite src/apc_test_suite.cpp)
+target_link_libraries(apc_test_suite ${catkin_LIBRARIES})
