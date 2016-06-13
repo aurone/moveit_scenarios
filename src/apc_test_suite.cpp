@@ -4,6 +4,7 @@
 
 #include <sbpl_geometry_utils/utils.h>
 #include <geometry_msgs/Pose.h>
+#include <leatherman/print.h>
 #include <moveit/move_group_interface/move_group.h>
 #include <ros/ros.h>
 #include <tf/transform_listener.h>
@@ -90,6 +91,8 @@ public:
         ROS_INFO("  Pregrasp Success: %zd/%zu (%0.3f%%)", pg_count, m_pregrasp_results.size(), 100.0 * (double)pg_count / m_pregrasp_results.size());
         auto wd_count = std::count(m_withdraw_results.begin(), m_withdraw_results.end(), true);
         ROS_INFO("  Withdraw Success: %zd/%zu (%0.3f%%)", wd_count, m_withdraw_results.size(), 100.0 * (double)wd_count / m_withdraw_results.size());
+
+        ROS_INFO("Dropoff Results: %s", to_string(m_dropoff_results).c_str());
     }
 
 private:
@@ -113,6 +116,7 @@ private:
     std::vector<bool> m_preposition_results;
     std::vector<bool> m_pregrasp_results;
     std::vector<bool> m_withdraw_results;
+    std::vector<int> m_dropoff_results;
 
     MainResult initializeGoalPoses()
     {
@@ -159,6 +163,7 @@ private:
         m_preposition_results.assign(m_preposition_poses.size(), false);
         m_pregrasp_results.assign(m_preposition_poses.size(), false);
         m_withdraw_results.assign(m_withdraw_poses.size(), false);
+        m_dropoff_results.assign(m_dropoff_poses.size(), 0);
 
         return MainResult::SUCCESS;
     }
@@ -198,6 +203,10 @@ private:
 
         m_move_group->allowLooking(false);
         m_move_group->allowReplanning(false);
+
+        ros::param::set("target_point_offset_x", 0.535);
+        ros::param::set("target_point_offset_y", 0.0);
+        ros::param::set("target_point_offset_z", 0.13);
     }
 
     MainResult moveThroughLocalizationGoals()
@@ -213,12 +222,15 @@ private:
             moveit::planning_interface::MoveGroup::Plan plan;
             moveit::planning_interface::MoveItErrorCode err;
 
-            ROS_INFO_STREAM("Moving to ee pose " << eet_pose);
+//            ROS_INFO_STREAM("Moving to ee pose " << eet_pose);
             err = m_move_group->move();
 
             m_localization_results[i] = (err.val == moveit_msgs::MoveItErrorCodes::SUCCESS);
             if (err.val != moveit_msgs::MoveItErrorCodes::SUCCESS) {
                 ROS_ERROR("Failed to move to target ee pose");
+            }
+            else {
+                ROS_INFO("Successfully moved to target localization pose");
             }
         }
 
@@ -249,6 +261,9 @@ private:
             if (err.val != moveit_msgs::MoveItErrorCodes::SUCCESS) {
                 ROS_ERROR("Failed to move to target image acquisition pose");
             }
+            else {
+                ROS_INFO("Successfully moved to target image acquisition pose");
+            }
 
             // move to the preposition pose
             while (!getEndEffectorTargetPose(preposition_pose, eet_pose)) {
@@ -261,6 +276,9 @@ private:
             m_preposition_results[i] = (err.val == moveit_msgs::MoveItErrorCodes::SUCCESS);
             if (err.val != moveit_msgs::MoveItErrorCodes::SUCCESS) {
                 ROS_ERROR("Failed to move to target preposition pose");
+            }
+            else {
+                ROS_INFO("Successfully moved to target preposition pose");
             }
 
             // move to the pregrasp pose
@@ -275,6 +293,9 @@ private:
             if (err.val != moveit_msgs::MoveItErrorCodes::SUCCESS) {
                 ROS_ERROR("Failed to move to target pregrasp pose");
             }
+            else {
+                ROS_INFO("Successfully moved to target pregrasp pose");
+            }
 
             // move to the with draw pose
             while (!getEndEffectorTargetPose(withdraw_pose, eet_pose)) {
@@ -287,6 +308,27 @@ private:
             m_withdraw_results[i] = (err.val == moveit_msgs::MoveItErrorCodes::SUCCESS);
             if (err.val != moveit_msgs::MoveItErrorCodes::SUCCESS) {
                 ROS_ERROR("Failed to move to target withdraw pose");
+            }
+            else {
+                ROS_INFO("Successfully moved to target withdraw pose");
+            }
+
+            for (size_t didx = 0; didx < m_dropoff_poses.size(); ++didx) {
+                const auto& dropoff_pose = m_dropoff_poses[didx];
+                while (!getEndEffectorTargetPose(dropoff_pose, eet_pose)) {
+                    ROS_WARN("Failed to transform MAS command pose to target ee pose");
+                }
+
+                m_move_group->setPoseTarget(eet_pose, "ee_link");
+                err = m_move_group->move();
+
+                if (err.val != moveit_msgs::MoveItErrorCodes::SUCCESS) {
+                    ROS_ERROR("Failed to move to target dropoff pose");
+                }
+                else {
+                    ROS_INFO("Successfully moved to target dropoff pose");
+                    ++m_dropoff_results[i];
+                }
             }
         }
     }
