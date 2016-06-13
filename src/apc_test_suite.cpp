@@ -327,7 +327,7 @@ private:
                 }
                 else {
                     ROS_INFO("Successfully moved to target dropoff pose");
-                    ++m_dropoff_results[i];
+                    ++m_dropoff_results[didx];
                 }
             }
         }
