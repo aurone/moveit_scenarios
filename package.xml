@@ -13,6 +13,8 @@
   <build_depend>cmake_modules</build_depend>
   <build_depend>eigen</build_depend>
 
+  <depend>actionlib</depend>
+  <depend>boost</depend>
   <depend>geometry_msgs</depend>
   <depend>leatherman</depend>
   <depend>moveit_core</depend>

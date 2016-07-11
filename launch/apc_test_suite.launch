@@ -10,4 +10,6 @@
         <param name="preposition_poses_filename" value="$(find moveit_tests)/data/apc/preposition_pose_list.txt"/>
         <param name="withdraw_poses_filename" value="$(find moveit_tests)/data/apc/withdraw_poses.txt"/>
     </node>
+
+    <env name="SCENARIO_DIR" value="$(find moveit_tests)/scenarios"/>
 </launch>

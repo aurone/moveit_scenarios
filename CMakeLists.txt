@@ -4,8 +4,11 @@ project(moveit_tests)
 set(CMAKE_BUILD_TYPE Release)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
+find_package(Boost REQUIRED)
+
 find_package(
     catkin REQUIRED
+        actionlib
         cmake_modules
         leatherman
         moveit_core
@@ -21,6 +24,7 @@ find_package(Eigen REQUIRED)
 
 catkin_package()
 
+include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${Eigen_INCLUDE_DIRS})
 include_directories(${catkin_INCLUDE_DIRS})
 
@@ -46,3 +50,6 @@ add_executable(torque_manifold_bb src/torque_manifold_bb.cpp)
 
 add_executable(apc_test_suite src/apc_test_suite.cpp)
 target_link_libraries(apc_test_suite ${catkin_LIBRARIES})
+
+add_executable(run_moveit_tests src/run_moveit_tests.cpp)
+target_link_libraries(run_moveit_tests ${Boost_LIBRARIES} ${catkin_LIBRARIES})
