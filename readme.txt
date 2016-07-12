@@ -7,6 +7,9 @@ containing the top-level configuration file, scenario.yaml. The top-level
 scenario.yaml file contains the base definitions for the motion plan request and
 for the planning options that compose a move group action goal.
 
+If SCENARIO_DIR specifies a relative path, the complete path is interpreted
+relative to the current working directory.
+
 Subdirectories of $SCENARIO_DIR may override the base configuration by
 redefining parameters within another file named scenario.yaml. Parameters that
 are not specified are not overridden
