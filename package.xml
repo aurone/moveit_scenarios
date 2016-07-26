@@ -1,12 +1,12 @@
 <package format="2">
-  <name>moveit_tests</name>
+  <name>moveit_scenarios</name>
   <version>0.0.0</version>
-  <description>The moveit_tests package</description>
+  <description>The moveit_scenarios package</description>
 
   <author email="andrew.dornbush@gmail.com">Andrew Dornbush</author>
   <maintainer email="andrew.dornbush@gmail.com">Andrew Dornbush</maintainer>
 
-  <license>TODO</license>
+  <license>BSD</license>
 
   <buildtool_depend>catkin</buildtool_depend>
 
