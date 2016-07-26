@@ -1,3 +1,5 @@
+TODO: This is the dream for the generic test app
+
 Tests are specified via hierarchical config. A single test configuration is
 built by traversing a hierarchy of directories where each child directory
 overrides pieces of the configuration specified in its ancestor directories.
