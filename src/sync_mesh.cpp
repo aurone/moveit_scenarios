@@ -43,7 +43,7 @@
 #include <moveit_msgs/GetPlanningScene.h>
 #include <geometric_shapes/mesh_operations.h>
 
-// class for ensuring that a given box exists in the planning scene
+// class for ensuring that a given mesh exists in the planning scene
 class MeshSynchronizer
 {
 public:
@@ -309,9 +309,14 @@ int main(int argc, char* argv[])
 {
     // x, y, z, length, width, height
     if (argc < 11) {
-        fprintf(stderr, "Usage: sync_mesh <name> <resource> <x> <y> <z> <r> <p> <y> <scale>\n");
+        fprintf(stderr, "Usage: sync_mesh <name> <resource> <x> <y> <z> <r> <p> <y> <scale> <frame>\n");
         return 1;
     }
+
+    for (int i = 0; i < argc; ++i) {
+        printf("%s ", argv[i]);
+    }
+    printf("\n");
 
     std::string mesh_name(argv[1]);
     std::string mesh_resource(argv[2]);
@@ -354,7 +359,6 @@ int main(int argc, char* argv[])
             ROS_DEBUG("last sync: %0.3f", last_sync.toSec());
             ROS_DEBUG("now: %0.3f", now.toSec());
             ROS_DEBUG("sync cycle: %0.3f", sync_rate.expectedCycleTime().toSec());
-            // synchronize box
             synchronizer.sync();
             last_sync = now;
         }

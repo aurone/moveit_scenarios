@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-rosrun moveit_tests sync_mesh industrial package://moveit_tests/meshes/industrial/industrial.stl industrial 0.0 0.0 0.0 0.0 0.0 0.0 1.0
+rosrun moveit_scenarios sync_mesh industrial package://moveit_scenarios/meshes/industrial/industrial.stl industrial 0.0 0.0 0.0 0.0 0.0 0.0 1.0 map

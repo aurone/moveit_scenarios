@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-rosrun moveit_tests sync_mesh turntable package://moveit_tests/meshes/turntable/turntable_base_with_texture.dae 0.78 0.0 0.36 0.0 0.0 0.0 0.0001
+rosrun moveit_scenarios sync_mesh turntable package://moveit_scenarios/meshes/turntable/turntable_base_with_texture.dae 0.78 0.0 0.36 0.0 0.0 0.0 0.0001

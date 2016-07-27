@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-rosrun moveit_tests sync_mesh tunnel package://moveit_tests/meshes/tunnel/tunnel.stl 0.65 -0.15 0.13 0.0 0.0 0.0 1.0
+rosrun moveit_scenarios sync_mesh tunnel package://moveit_scenarios/meshes/tunnel/tunnel.stl 0.65 -0.15 0.13 0.0 0.0 0.0 1.0
