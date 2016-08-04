@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+rosrun moveit_scenarios sync_mesh handrail package://moveit_scenarios/meshes/handrail.stl 0.0 0.0 0.0 0.0 0.0 0.0 1.0 map
