@@ -32,6 +32,7 @@
 #include "birdhouse_test_suite.h"
 
 #include <fstream>
+#include <sbpl_geometry_utils/interpolate.h>
 
 // Sample a number of poses along the frame of the birdhouse. The positions lie
 // on the surface of the bounding box with orientations pointing inward along

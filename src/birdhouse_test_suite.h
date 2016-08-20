@@ -49,7 +49,6 @@
 #include <moveit_msgs/GetMotionPlan.h>
 #include <ros/ros.h>
 #include <sbpl_geometry_utils/utils.h>
-#include <sbpl_geometry_utils/interpolation.h>
 #include <visualization_msgs/Marker.h>
 
 std::vector<geometry_msgs::Pose> SampleBirdhouseGoalPoses(
