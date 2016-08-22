@@ -49,13 +49,15 @@
     } while(0)
 
 bool Overwrite(std::uint8_t& b, YAML::Node n);
-//bool Overwrite(std::int8_t& b, YAML::Node n);
+bool Overwrite(std::int8_t& b, YAML::Node n);
 bool Overwrite(std::int32_t& i, YAML::Node n);
+bool Overwrite(float& f, YAML::Node n);
 bool Overwrite(double& d, YAML::Node n);
 bool Overwrite(std::string& o, YAML::Node n);
 bool Overwrite(std::uint32_t& o, YAML::Node n);
 bool Overwrite(ros::Time& o, YAML::Node n);
 bool Overwrite(std_msgs::Header& o, YAML::Node n);
+bool Overwrite(std_msgs::ColorRGBA& o, YAML::Node n);
 bool Overwrite(geometry_msgs::Vector3& o, YAML::Node n);
 bool Overwrite(geometry_msgs::Quaternion& o, YAML::Node n);
 bool Overwrite(geometry_msgs::Transform& o, YAML::Node n);
@@ -63,12 +65,16 @@ bool Overwrite(geometry_msgs::Twist& o, YAML::Node n);
 bool Overwrite(geometry_msgs::Wrench& o, YAML::Node n);
 bool Overwrite(geometry_msgs::Point& o, YAML::Node n);
 bool Overwrite(geometry_msgs::Pose& o, YAML::Node n);
+bool Overwrite(geometry_msgs::TransformStamped& o, YAML::Node n);
 bool Overwrite(shape_msgs::SolidPrimitive& o, YAML::Node n);
 bool Overwrite(shape_msgs::Mesh& o, YAML::Node n);
 bool Overwrite(shape_msgs::MeshTriangle& o, YAML::Node n);
+bool Overwrite(shape_msgs::Plane& o, YAML::Node n);
 bool Overwrite(sensor_msgs::JointState& o, YAML::Node n);
 bool Overwrite(sensor_msgs::MultiDOFJointState& o, YAML::Node n);
 bool Overwrite(trajectory_msgs::JointTrajectory& o, YAML::Node n);
+bool Overwrite(octomap_msgs::OctomapWithPose& o, YAML::Node n);
+bool Overwrite(object_recognition_msgs::ObjectType& o, YAML::Node n);
 bool Overwrite(moveit_msgs::CollisionObject& o, YAML::Node n);
 bool Overwrite(moveit_msgs::AttachedCollisionObject& o, YAML::Node n);
 bool Overwrite(moveit_msgs::WorkspaceParameters& o, YAML::Node n);
@@ -81,6 +87,12 @@ bool Overwrite(moveit_msgs::OrientationConstraint& o, YAML::Node n);
 bool Overwrite(moveit_msgs::VisibilityConstraint& o, YAML::Node n);
 bool Overwrite(moveit_msgs::Constraints& o, YAML::Node n);
 bool Overwrite(moveit_msgs::TrajectoryConstraints& o, YAML::Node n);
+bool Overwrite(moveit_msgs::AllowedCollisionEntry& o, YAML::Node n);
+bool Overwrite(moveit_msgs::AllowedCollisionMatrix& o, YAML::Node n);
+bool Overwrite(moveit_msgs::LinkPadding& o, YAML::Node n);
+bool Overwrite(moveit_msgs::LinkScale& o, YAML::Node n);
+bool Overwrite(moveit_msgs::ObjectColor& o, YAML::Node n);
+bool Overwrite(moveit_msgs::PlanningSceneWorld& o, YAML::Node n);
 bool Overwrite(moveit_msgs::MotionPlanRequest& o, YAML::Node n);
 bool Overwrite(moveit_msgs::PlanningOptions& o, YAML::Node n);
 
@@ -129,11 +141,11 @@ bool Overwrite(std::uint8_t& b, YAML::Node n)
     return true;
 }
 
-//bool Overwrite(std::int8_t& b, YAML::Node n)
-//{
-//    b = n.as<std::int8_t>();
-//    return true;
-//}
+bool Overwrite(std::int8_t& b, YAML::Node n)
+{
+    b = (std::int8_t)n.as<int>();
+    return true;
+}
 
 bool Overwrite(std::int32_t& i, YAML::Node n)
 {
@@ -141,6 +153,15 @@ bool Overwrite(std::int32_t& i, YAML::Node n)
         return false;
     }
     i = n.as<std::int32_t>();
+    return true;
+}
+
+bool Overwrite(float& f, YAML::Node n)
+{
+    if (n.Type() == YAML::NodeType::Null) {
+        return false;
+    }
+    f = n.as<float>();
     return true;
 }
 
@@ -229,6 +250,14 @@ bool Overwrite(geometry_msgs::Pose& o, YAML::Node n)
     return true;
 }
 
+bool Overwrite(geometry_msgs::TransformStamped& o, YAML::Node n)
+{
+    OVERWRITE_FIELD(header);
+    OVERWRITE_FIELD(child_frame_id);
+    OVERWRITE_FIELD(transform);
+    return true;
+}
+
 bool Overwrite(shape_msgs::SolidPrimitive& o, YAML::Node n)
 {
     OVERWRITE_FIELD(type);
@@ -249,11 +278,26 @@ bool Overwrite(shape_msgs::MeshTriangle& o, YAML::Node n)
     return true;
 }
 
+bool Overwrite(shape_msgs::Plane& o, YAML::Node n)
+{
+    OVERWRITE_FIELD(coef);
+    return true;
+}
+
 bool Overwrite(std_msgs::Header& o, YAML::Node n)
 {
     OVERWRITE_FIELD(seq);
     OVERWRITE_FIELD(stamp);
     OVERWRITE_FIELD(frame_id);
+    return true;
+}
+
+bool Overwrite(std_msgs::ColorRGBA& o, YAML::Node n)
+{
+    OVERWRITE_FIELD(r);
+    OVERWRITE_FIELD(g);
+    OVERWRITE_FIELD(b);
+    OVERWRITE_FIELD(a);
     return true;
 }
 
@@ -283,9 +327,31 @@ bool Overwrite(trajectory_msgs::JointTrajectory& o, YAML::Node n)
     return true;
 }
 
-bool Overwrite(moveit_msgs::CollisionObject& o, YAML::Node n)
+bool Overwrite(octomap_msgs::OctomapWithPose& o, YAML::Node n)
 {
     ROS_ERROR_ONCE("%s unimplemented", __PRETTY_FUNCTION__);
+    return true;
+}
+
+bool Overwrite(object_recognition_msgs::ObjectType& o, YAML::Node n)
+{
+    OVERWRITE_FIELD(key);
+    OVERWRITE_FIELD(db);
+    return true;
+}
+
+bool Overwrite(moveit_msgs::CollisionObject& o, YAML::Node n)
+{
+    OVERWRITE_FIELD(header);
+    OVERWRITE_FIELD(id);
+    OVERWRITE_FIELD(type);
+    OVERWRITE_FIELD(primitives);
+    OVERWRITE_FIELD(primitive_poses);
+    OVERWRITE_FIELD(meshes);
+    OVERWRITE_FIELD(mesh_poses);
+    OVERWRITE_FIELD(planes);
+    OVERWRITE_FIELD(plane_poses);
+    OVERWRITE_FIELD(operation);
     return true;
 }
 
@@ -309,7 +375,16 @@ bool Overwrite(moveit_msgs::WorkspaceParameters& o, YAML::Node n)
 
 bool Overwrite(moveit_msgs::PlanningScene& o, YAML::Node n)
 {
-    ROS_ERROR_ONCE("%s unimplemented", __PRETTY_FUNCTION__);
+    OVERWRITE_FIELD(name);
+    OVERWRITE_FIELD(robot_state);
+    OVERWRITE_FIELD(robot_model_name);
+    OVERWRITE_FIELD(fixed_frame_transforms);
+    OVERWRITE_FIELD(allowed_collision_matrix);
+    OVERWRITE_FIELD(link_padding);
+    OVERWRITE_FIELD(link_scale);
+    OVERWRITE_FIELD(object_colors);
+    OVERWRITE_FIELD(world);
+    OVERWRITE_FIELD(is_diff);
     return true;
 }
 
@@ -382,6 +457,49 @@ bool Overwrite(moveit_msgs::Constraints& o, YAML::Node n)
 bool Overwrite(moveit_msgs::TrajectoryConstraints& o, YAML::Node n)
 {
     OVERWRITE_FIELD(constraints);
+    return true;
+}
+
+bool Overwrite(moveit_msgs::AllowedCollisionEntry& o, YAML::Node n)
+{
+    OVERWRITE_FIELD(enabled);
+    return true;
+}
+
+bool Overwrite(moveit_msgs::AllowedCollisionMatrix& o, YAML::Node n)
+{
+    OVERWRITE_FIELD(entry_names);
+    OVERWRITE_FIELD(entry_values);
+    OVERWRITE_FIELD(default_entry_names);
+    OVERWRITE_FIELD(default_entry_values);
+    return true;
+}
+
+bool Overwrite(moveit_msgs::LinkPadding& o, YAML::Node n)
+{
+    OVERWRITE_FIELD(link_name);
+    OVERWRITE_FIELD(padding);
+    return true;
+}
+
+bool Overwrite(moveit_msgs::LinkScale& o, YAML::Node n)
+{
+    OVERWRITE_FIELD(link_name);
+    OVERWRITE_FIELD(scale);
+    return true;
+}
+
+bool Overwrite(moveit_msgs::ObjectColor& o, YAML::Node n)
+{
+    OVERWRITE_FIELD(id);
+    OVERWRITE_FIELD(color);
+    return true;
+}
+
+bool Overwrite(moveit_msgs::PlanningSceneWorld& o, YAML::Node n)
+{
+    OVERWRITE_FIELD(collision_objects);
+    OVERWRITE_FIELD(octomap);
     return true;
 }
 
