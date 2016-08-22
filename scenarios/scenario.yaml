@@ -1,5 +1,11 @@
-# TODO what yaml value(s) should this time fields take in
-
+# NOTES
+#
+# * `stamp` fields take in an integer as the nanosecond count
+# * default overrides noted:
+# *     planning_options.plan_only to true
+# *     planning_options.planning_scene_diff.world.octomap.binary to true (?)
+# *     num_planning_attempts to 1
+#
 request:
   workspace_parameters:
     header:
@@ -44,7 +50,7 @@ request:
     constraints: []
   planner_id: ""
   group_name: ""
-  num_planning_attempts: 0
+  num_planning_attempts: 1
   allowed_planning_time: 0.0
   max_velocity_scaling_factor: 0.0
   max_acceleration_scaling_factor: 0.0
