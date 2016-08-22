@@ -1,0 +1,4 @@
+#!/bin/bash
+SCENARIO_ROOT=`rospack find moveit_scenarios`/scenarios rosrun moveit_scenarios run_moveit_tests `rospack find moveit_scenarios`/scenarios/roman/tabletop/scenario.yaml
+#SCENARIO_ROOT=`rospack find moveit_scenarios`/scenarios gdb ex --args $ROS_WORKSPACE/devel/lib/moveit_scenarios/run_moveit_tests `rospack find moveit_scenarios`/scenarios/roman/tabletop/scenario.yaml
+
