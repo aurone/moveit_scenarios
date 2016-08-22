@@ -41,6 +41,13 @@
 #include <ros/ros.h>
 #include <yaml-cpp/yaml.h>
 
+#define OVERWRITE_FIELD(field) \
+    do {\
+        if (n[#field]) {\
+            Overwrite(o.field, n[#field]);\
+        }\
+    } while(0)
+
 bool Overwrite(std::uint8_t& b, YAML::Node n);
 //bool Overwrite(std::int8_t& b, YAML::Node n);
 bool Overwrite(std::int32_t& i, YAML::Node n);
@@ -48,6 +55,7 @@ bool Overwrite(double& d, YAML::Node n);
 bool Overwrite(std::string& o, YAML::Node n);
 bool Overwrite(std::uint32_t& o, YAML::Node n);
 bool Overwrite(ros::Time& o, YAML::Node n);
+bool Overwrite(std_msgs::Header& o, YAML::Node n);
 bool Overwrite(geometry_msgs::Vector3& o, YAML::Node n);
 bool Overwrite(geometry_msgs::Quaternion& o, YAML::Node n);
 bool Overwrite(geometry_msgs::Transform& o, YAML::Node n);
@@ -55,7 +63,9 @@ bool Overwrite(geometry_msgs::Twist& o, YAML::Node n);
 bool Overwrite(geometry_msgs::Wrench& o, YAML::Node n);
 bool Overwrite(geometry_msgs::Point& o, YAML::Node n);
 bool Overwrite(geometry_msgs::Pose& o, YAML::Node n);
-bool Overwrite(std_msgs::Header& o, YAML::Node n);
+bool Overwrite(shape_msgs::SolidPrimitive& o, YAML::Node n);
+bool Overwrite(shape_msgs::Mesh& o, YAML::Node n);
+bool Overwrite(shape_msgs::MeshTriangle& o, YAML::Node n);
 bool Overwrite(sensor_msgs::JointState& o, YAML::Node n);
 bool Overwrite(sensor_msgs::MultiDOFJointState& o, YAML::Node n);
 bool Overwrite(trajectory_msgs::JointTrajectory& o, YAML::Node n);
@@ -85,11 +95,37 @@ bool Overwrite(std::vector<T>& v, YAML::Node n)
     return true;
 }
 
+template <typename T, std::size_t S>
+bool Overwrite(boost::array<T, S>& o, YAML::Node n)
+{
+    int written = 0;
+    for (auto it = n.begin(); it != n.end() && written < S; ++it) {
+        YAML::Node nn = *it;
+        Overwrite(o[written], nn);
+        ++written;
+    }
+    return true;
+}
+
 //////////////////
 
 bool Overwrite(std::uint8_t& b, YAML::Node n)
 {
-    b = n.as<bool>();
+    if (n.Type() == YAML::NodeType::Null) {
+        return false;
+    }
+
+    try {
+        b = n.as<bool>(); // allow 'true' and 'false' boolean scalars
+    }
+    catch (...) {
+        try {
+            b = n.as<unsigned>();
+        }
+        catch (...) {
+            return false;
+        }
+    }
     return true;
 }
 
@@ -101,24 +137,36 @@ bool Overwrite(std::uint8_t& b, YAML::Node n)
 
 bool Overwrite(std::int32_t& i, YAML::Node n)
 {
+    if (n.Type() == YAML::NodeType::Null) {
+        return false;
+    }
     i = n.as<std::int32_t>();
     return true;
 }
 
 bool Overwrite(double& d, YAML::Node n)
 {
+    if (n.Type() == YAML::NodeType::Null) {
+        return false;
+    }
     d = n.as<double>();
     return true;
 }
 
 bool Overwrite(std::string& o, YAML::Node n)
 {
+    if (n.Type() == YAML::NodeType::Null) {
+        return false;
+    }
     o = n.as<std::string>();
     return true;
 }
 
 bool Overwrite(std::uint32_t& o, YAML::Node n)
 {
+    if (n.Type() == YAML::NodeType::Null) {
+        return false;
+    }
     o = n.as<std::uint32_t>();
     return true;
 }
@@ -130,144 +178,102 @@ bool Overwrite(ros::Time& o, YAML::Node n)
 
 bool Overwrite(geometry_msgs::Vector3& o, YAML::Node n)
 {
-    if (n["x"]) {
-        Overwrite(o.x, n["x"]);
-    }
-    if (n["y"]) {
-        Overwrite(o.y, n["y"]);
-    }
-    if (n["z"]) {
-        Overwrite(o.z, n["z"]);
-    }
+    OVERWRITE_FIELD(x);
+    OVERWRITE_FIELD(y);
+    OVERWRITE_FIELD(z);
     return true;
 }
 
 bool Overwrite(geometry_msgs::Quaternion& o, YAML::Node n)
 {
-    if (n["w"]) {
-        Overwrite(o.w, n["w"]);
-    }
-    if (n["x"]) {
-        Overwrite(o.x, n["x"]);
-    }
-    if (n["y"]) {
-        Overwrite(o.y, n["y"]);
-    }
-    if (n["z"]) {
-        Overwrite(o.z, n["z"]);
-    }
+    OVERWRITE_FIELD(w);
+    OVERWRITE_FIELD(x);
+    OVERWRITE_FIELD(y);
+    OVERWRITE_FIELD(z);
     return true;
 }
 
 bool Overwrite(geometry_msgs::Transform& o, YAML::Node n)
 {
-    if (n["translation"]) {
-        Overwrite(o.translation, n["translation"]);
-    }
-    if (n["rotation"]) {
-        Overwrite(o.rotation, n["rotation"]);
-    }
+    OVERWRITE_FIELD(translation);
+    OVERWRITE_FIELD(rotation);
     return true;
 }
 
 bool Overwrite(geometry_msgs::Twist& o, YAML::Node n)
 {
-    if (n["linear"]) {
-        Overwrite(o.linear, n["linear"]);
-    }
-    if (n["angular"]) {
-        Overwrite(o.angular, n["angular"]);
-    }
+    OVERWRITE_FIELD(linear);
+    OVERWRITE_FIELD(angular);
     return true;
 }
 
 bool Overwrite(geometry_msgs::Wrench& o, YAML::Node n)
 {
-    if (n["force"]) {
-        Overwrite(o.force, n["force"]);
-    }
-    if (n["torque"]) {
-        Overwrite(o.torque, n["torque"]);
-    }
+    OVERWRITE_FIELD(force);
+    OVERWRITE_FIELD(torque);
     return true;
 }
 
 bool Overwrite(geometry_msgs::Point& o, YAML::Node n)
 {
-    if (n["x"]) {
-        Overwrite(o.x, n["x"]);
-    }
-    if (n["y"]) {
-        Overwrite(o.y, n["y"]);
-    }
-    if (n["z"]) {
-        Overwrite(o.z, n["z"]);
-    }
+    OVERWRITE_FIELD(x);
+    OVERWRITE_FIELD(y);
+    OVERWRITE_FIELD(z);
     return true;
 }
 
 bool Overwrite(geometry_msgs::Pose& o, YAML::Node n)
 {
-    if (n["position"]) {
-        Overwrite(o.position, n["position"]);
-    }
-    if (n["orientation"]) {
-        Overwrite(o.orientation, n["orientation"]);
-    }
+    OVERWRITE_FIELD(position);
+    OVERWRITE_FIELD(orientation);
+    return true;
+}
+
+bool Overwrite(shape_msgs::SolidPrimitive& o, YAML::Node n)
+{
+    OVERWRITE_FIELD(type);
+    OVERWRITE_FIELD(dimensions);
+    return true;
+}
+
+bool Overwrite(shape_msgs::Mesh& o, YAML::Node n)
+{
+    OVERWRITE_FIELD(triangles);
+    OVERWRITE_FIELD(vertices);
+    return true;
+}
+
+bool Overwrite(shape_msgs::MeshTriangle& o, YAML::Node n)
+{
+    OVERWRITE_FIELD(vertex_indices);
     return true;
 }
 
 bool Overwrite(std_msgs::Header& o, YAML::Node n)
 {
-    if (n["seq"]) {
-        Overwrite(o.seq, n["seq"]);
-    }
-    if (n["stamp"]) {
-        Overwrite(o.stamp, n["stamp"]);
-    }
-    if (n["frame_id"]) {
-        Overwrite(o.frame_id, n["frame_id"]);
-    }
+    OVERWRITE_FIELD(seq);
+    OVERWRITE_FIELD(stamp);
+    OVERWRITE_FIELD(frame_id);
     return true;
 }
 
 bool Overwrite(sensor_msgs::JointState& o, YAML::Node n)
 {
-    if (n["header"]) {
-        Overwrite(o.header, n["header"]);
-    }
-    if (n["name"]) {
-        Overwrite(o.name, n["name"]);
-    }
-    if (n["position"]) {
-        Overwrite(o.position, n["position"]);
-    }
-    if (n["velocity"]) {
-        Overwrite(o.velocity, n["velocity"]);
-    }
-    if (n["effort"]) {
-        Overwrite(o.effort, n["effort"]);
-    }
+    OVERWRITE_FIELD(header);
+    OVERWRITE_FIELD(name);
+    OVERWRITE_FIELD(position);
+    OVERWRITE_FIELD(velocity);
+    OVERWRITE_FIELD(effort);
     return true;
 }
 
 bool Overwrite(sensor_msgs::MultiDOFJointState& o, YAML::Node n)
 {
-    if (n["header"]) {
-        Overwrite(o.header, n["header"]);
-    }
-    if (n["joint_names"]) {
-        Overwrite(o.joint_names, n["joint_names"]);
-    }
-    if (n["transforms"]) {
-        Overwrite(o.transforms, n["transforms"]);
-    }
-    if (n["twist"]) {
-        Overwrite(o.twist, n["twist"]);
-    }
-    if (n["wrench"]) {
-        Overwrite(o.wrench, n["wrench"]);
-    }
+    OVERWRITE_FIELD(header);
+    OVERWRITE_FIELD(joint_names);
+    OVERWRITE_FIELD(transforms);
+    OVERWRITE_FIELD(twist);
+    OVERWRITE_FIELD(wrench);
     return true;
 }
 
@@ -285,35 +291,19 @@ bool Overwrite(moveit_msgs::CollisionObject& o, YAML::Node n)
 
 bool Overwrite(moveit_msgs::AttachedCollisionObject& o, YAML::Node n)
 {
-    if (n["link_name"]) {
-        Overwrite(o.link_name, n["link_name"]);
-    }
-    if (n["object"]) {
-        Overwrite(o.object, n["object"]);
-    }
-    if (n["touch_links"]) {
-        Overwrite(o.touch_links, n["touch_links"]);
-    }
-    if (n["detach_posture"]) {
-        Overwrite(o.detach_posture, n["detach_posture"]);
-    }
-    if (n["weight"]) {
-        Overwrite(o.weight, n["weight"]);
-    }
+    OVERWRITE_FIELD(link_name);
+    OVERWRITE_FIELD(object);
+    OVERWRITE_FIELD(touch_links);
+    OVERWRITE_FIELD(detach_posture);
+    OVERWRITE_FIELD(weight);
     return true;
 }
 
 bool Overwrite(moveit_msgs::WorkspaceParameters& o, YAML::Node n)
 {
-    if (n["header"]) {
-        Overwrite(o.header, n["header"]);
-    }
-    if (n["min_corner"]) {
-        Overwrite(o.min_corner, n["min_corner"]);
-    }
-    if (n["max_corner"]) {
-        Overwrite(o.max_corner, n["max_corner"]);
-    }
+    OVERWRITE_FIELD(header);
+    OVERWRITE_FIELD(min_corner);
+    OVERWRITE_FIELD(max_corner);
     return true;
 }
 
@@ -324,90 +314,51 @@ bool Overwrite(moveit_msgs::PlanningScene& o, YAML::Node n)
 
 bool Overwrite(moveit_msgs::RobotState& o, YAML::Node n)
 {
-    if (n["joint_state"]) {
-        Overwrite(o.joint_state, n["joint_state"]);
-    }
-    if (n["multi_dof_joint_state"]) {
-        Overwrite(o.multi_dof_joint_state, n["multi_dof_joint_state"]);
-    }
-    if (n["attached_collision_objects"]) {
-        Overwrite(o.attached_collision_objects, n["attached_collision_objects"]);
-    }
-    if (n["is_diff"]) {
-        Overwrite(o.is_diff, n["is_diff"]);
-    }
+    OVERWRITE_FIELD(joint_state);
+    OVERWRITE_FIELD(multi_dof_joint_state);
+    OVERWRITE_FIELD(attached_collision_objects);
+    OVERWRITE_FIELD(is_diff);
     return true;
 }
 
 bool Overwrite(moveit_msgs::BoundingVolume& o, YAML::Node n)
 {
-    ROS_ERROR_ONCE("%s unimplemented", __PRETTY_FUNCTION__);
+    OVERWRITE_FIELD(primitives);
+    OVERWRITE_FIELD(primitive_poses);
+    OVERWRITE_FIELD(meshes);
+    OVERWRITE_FIELD(mesh_poses);
     return true;
 }
 
 bool Overwrite(moveit_msgs::JointConstraint& o, YAML::Node n)
 {
-    if (n["joint_name"]) {
-        Overwrite(o.joint_name, n["joint_name"]);
-    }
-    if (n["position"]) {
-        Overwrite(o.position, n["position"]);
-    }
-    if (n["tolerance_above"]) {
-        Overwrite(o.tolerance_above, n["tolerance_above"]);
-    }
-    if (n["tolerance_below"]) {
-        Overwrite(o.tolerance_below, n["tolerance_below"]);
-    }
-    if (n["weight"]) {
-        Overwrite(o.weight, n["weight"]);
-    }
+    OVERWRITE_FIELD(joint_name);
+    OVERWRITE_FIELD(position);
+    OVERWRITE_FIELD(tolerance_above);
+    OVERWRITE_FIELD(tolerance_below);
+    OVERWRITE_FIELD(weight);
     return true;
 }
 
 bool Overwrite(moveit_msgs::PositionConstraint& o, YAML::Node n)
 {
-    if (n["header"]) {
-        Overwrite(o.header, n["header"]);
-    }
-    if (n["link_name"]) {
-        Overwrite(o.link_name, n["link_name"]);
-    }
-    if (n["target_point_offset"]) {
-        Overwrite(o.target_point_offset, n["target_point_offset"]);
-    }
-    if (n["constraint_region"]) {
-        Overwrite(o.constraint_region, n["constraint_region"]);
-    }
-    if (n["weight"]) {
-        Overwrite(o.weight, n["weight"]);
-    }
+    OVERWRITE_FIELD(header);
+    OVERWRITE_FIELD(link_name);
+    OVERWRITE_FIELD(target_point_offset);
+    OVERWRITE_FIELD(constraint_region);
+    OVERWRITE_FIELD(weight);
     return true;
 }
 
 bool Overwrite(moveit_msgs::OrientationConstraint& o, YAML::Node n)
 {
-    if (n["header"]) {
-        Overwrite(o.header, n["header"]);
-    }
-    if (n["orientation"]) {
-        Overwrite(o.orientation, n["orientation"]);
-    }
-    if (n["link_name"]) {
-        Overwrite(o.link_name, n["link_name"]);
-    }
-    if (n["absolute_x_axis_tolerance"]) {
-        Overwrite(o.absolute_x_axis_tolerance, n["absolute_x_axis_tolerance"]);
-    }
-    if (n["absolute_y_axis_tolerance"]) {
-        Overwrite(o.absolute_y_axis_tolerance, n["absolute_y_axis_tolerance"]);
-    }
-    if (n["absolute_z_axis_tolerance"]) {
-        Overwrite(o.absolute_z_axis_tolerance, n["absolute_z_axis_tolerance"]);
-    }
-    if (n["weight"]) {
-        Overwrite(o.weight, n["weight"]);
-    }
+    OVERWRITE_FIELD(header);
+    OVERWRITE_FIELD(orientation);
+    OVERWRITE_FIELD(link_name);
+    OVERWRITE_FIELD(absolute_x_axis_tolerance);
+    OVERWRITE_FIELD(absolute_y_axis_tolerance);
+    OVERWRITE_FIELD(absolute_z_axis_tolerance);
+    OVERWRITE_FIELD(weight);
     return true;
 }
 
@@ -419,97 +370,46 @@ bool Overwrite(moveit_msgs::VisibilityConstraint& o, YAML::Node n)
 
 bool Overwrite(moveit_msgs::Constraints& o, YAML::Node n)
 {
-    if (n["name"]) {
-        Overwrite(o.name, n["name"]);
-    }
-    if (n["joint_constraints"]) {
-        Overwrite(o.joint_constraints, n["joint_constraints"]);
-    }
-    if (n["position_constraints"]) {
-        Overwrite(o.position_constraints, n["position_constraints"]);
-    }
-    if (n["orientation_constraints"]) {
-        Overwrite(o.orientation_constraints, n["orientation_constraints"]);
-    }
-    if (n["visibility_constraints"]) {
-        Overwrite(o.visibility_constraints, n["visibility_constraints"]);
-    }
+    OVERWRITE_FIELD(name);
+    OVERWRITE_FIELD(joint_constraints);
+    OVERWRITE_FIELD(position_constraints);
+    OVERWRITE_FIELD(orientation_constraints);
+    OVERWRITE_FIELD(visibility_constraints);
     return true;
 }
 
 bool Overwrite(moveit_msgs::TrajectoryConstraints& o, YAML::Node n)
 {
-    if (n["constraints"]) {
-        Overwrite(o.constraints, n["constraints"]);
-    }
+    OVERWRITE_FIELD(constraints);
     return true;
 }
 
 bool Overwrite(moveit_msgs::MotionPlanRequest& o, YAML::Node n)
 {
-    if (n["workspace_parameters"]) {
-        Overwrite(o.workspace_parameters, n["workspace_parameters"]);
-    }
-    if (n["start_state"]) {
-        Overwrite(o.start_state, n["start_state"]);
-    }
-    if (n["goal_constraints"]) {
-        Overwrite(o.goal_constraints, n["goal_constraints"]);
-    }
-    if (n["path_constraints"]) {
-        Overwrite(o.path_constraints, n["path_constraints"]);
-    }
-    if (n["trajectory_constraints"]) {
-        Overwrite(o.trajectory_constraints, n["trajectory_constraints"]);
-    }
-    if (n["planner_id"]) {
-        Overwrite(o.planner_id, n["planner_id"]);
-    }
-    if (n["group_name"]) {
-        Overwrite(o.group_name, n["group_name"]);
-    }
-    if (n["num_planning_attempts"]) {
-        Overwrite(o.num_planning_attempts, n["num_planning_attempts"]);
-    }
-    if (n["allowed_planning_time"]) {
-        Overwrite(o.allowed_planning_time, n["allowed_planning_time"]);
-    }
-    if (n["max_velocity_scaling_factor"]) {
-        Overwrite(o.max_velocity_scaling_factor, n["max_velocity_scaling_factor"]);
-    }
-    if (n["max_acceleration_scaling_factor"]) {
-        Overwrite(o.max_acceleration_scaling_factor, n["max_acceleration_scaling_factor"]);
-    }
+    OVERWRITE_FIELD(workspace_parameters);
+    OVERWRITE_FIELD(start_state);
+    OVERWRITE_FIELD(goal_constraints);
+    OVERWRITE_FIELD(path_constraints);
+    OVERWRITE_FIELD(trajectory_constraints);
+    OVERWRITE_FIELD(planner_id);
+    OVERWRITE_FIELD(group_name);
+    OVERWRITE_FIELD(num_planning_attempts);
+    OVERWRITE_FIELD(allowed_planning_time);
+    OVERWRITE_FIELD(max_velocity_scaling_factor);
+    OVERWRITE_FIELD(max_acceleration_scaling_factor);
     return true;
 }
 
 bool Overwrite(moveit_msgs::PlanningOptions& o, YAML::Node n)
 {
-    if (n["planning_scene_diff"]) {
-        Overwrite(o.planning_scene_diff, n["planning_scene_diff"]);
-    }
-    if (n["plan_only"]) {
-        Overwrite(o.plan_only, n["plan_only"]);
-    }
-    if (n["look_around"]) {
-        Overwrite(o.look_around, n["look_around"]);
-    }
-    if (n["look_around_attempts"]) {
-        Overwrite(o.look_around_attempts, n["look_around_attempts"]);
-    }
-    if (n["max_safe_execution_cost"]) {
-        Overwrite(o.max_safe_execution_cost, n["max_safe_execution_cost"]);
-    }
-    if (n["replan"]) {
-        Overwrite(o.replan, n["replan"]);
-    }
-    if (n["replan_attempts"]) {
-        Overwrite(o.replan_attempts, n["replan_attempts"]);
-    }
-    if (n["replan_delay"]) {
-        Overwrite(o.replan_delay, n["replan_delay"]);
-    }
-
+    OVERWRITE_FIELD(planning_scene_diff);
+    OVERWRITE_FIELD(plan_only);
+    OVERWRITE_FIELD(look_around);
+    OVERWRITE_FIELD(look_around_attempts);
+    OVERWRITE_FIELD(max_safe_execution_cost);
+    OVERWRITE_FIELD(replan);
+    OVERWRITE_FIELD(replan_attempts);
+    OVERWRITE_FIELD(replan_delay);
     return true;
 }
 
