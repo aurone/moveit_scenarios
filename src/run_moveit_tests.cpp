@@ -309,6 +309,7 @@ bool Overwrite(moveit_msgs::WorkspaceParameters& o, YAML::Node n)
 
 bool Overwrite(moveit_msgs::PlanningScene& o, YAML::Node n)
 {
+    ROS_ERROR_ONCE("%s unimplemented", __PRETTY_FUNCTION__);
     return true;
 }
 
@@ -456,17 +457,13 @@ bool ParseGoal(
     {
         std::vector<boost::filesystem::path> base_path_entries;
 
-        std::cout << "base path entries:" << std::endl;
         for (auto it = root_scenario_path.begin();
                 it != root_scenario_path.end(); ++it)
         {
-            std::cout << *it << std::endl;
             base_path_entries.push_back(*it);
         }
 
-        std::cout << "path entries:" << std::endl;
         for (auto it = scenario_path.begin(); it != scenario_path.end(); ++it) {
-            std::cout << *it << std::endl;
             path_entries.push_back(*it);
         }
 
@@ -573,7 +570,7 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    ROS_INFO_STREAM("Parsed Move Group Goal:\n" << goal);
+    ROS_DEBUG_STREAM("Parsed Move Group Goal:\n" << goal);
 
     typedef actionlib::SimpleActionClient<moveit_msgs::MoveGroupAction>
     MoveGroupActionClient;
