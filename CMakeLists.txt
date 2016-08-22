@@ -22,11 +22,16 @@ find_package(
         visualization_msgs)
 find_package(Eigen REQUIRED)
 
+find_package(PkgConfig REQUIRED)
+
+pkg_check_modules(yaml REQUIRED yaml-cpp)
+
 catkin_package()
 
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${Eigen_INCLUDE_DIRS})
 include_directories(${catkin_INCLUDE_DIRS})
+include_directories(${yaml_INCLUDE_DIRS})
 
 add_executable(sync_box src/sync_box.cpp)
 target_link_libraries(sync_box ${catkin_LIBRARIES})
@@ -52,4 +57,8 @@ add_executable(apc_test_suite src/apc_test_suite.cpp)
 target_link_libraries(apc_test_suite ${catkin_LIBRARIES})
 
 add_executable(run_moveit_tests src/run_moveit_tests.cpp)
-target_link_libraries(run_moveit_tests ${Boost_LIBRARIES} ${catkin_LIBRARIES})
+target_link_libraries(
+    run_moveit_tests
+    ${Boost_LIBRARIES}
+    ${catkin_LIBRARIES}
+    ${yaml_LIBRARIES})
