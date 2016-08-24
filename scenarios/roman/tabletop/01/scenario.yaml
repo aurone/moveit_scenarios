@@ -1,0 +1,24 @@
+request:
+  start_state:
+    joint_state:
+      position: [ 0, 0, 0, 0, 0, 0, 0 ]
+  goal_constraints:
+    - position_constraints:
+        - header:
+            frame_id: base_footprint
+          link_name: limb_right_link7
+          constraint_region:
+            primitives:
+              - type: 2
+                dimensions: [ 0.05 ]
+            primitive_poses:
+              - position: { x: 0.9077, y: -0.1753, z: 1.1068 }
+                orientation: { w: 0.6826, x: -0.6837, y: -0.1823, z: 0.1826 }
+          weight: 1.0
+      orientation_constraints:
+        - orientation: { w: 0.6826, x: -0.6837, y: -0.1823, z: 0.1826 }
+          link_name: limb_right_link7
+          absolute_x_axis_tolerance: 0.1745
+          absolute_y_axis_tolerance: 0.1745
+          absolute_z_axis_tolerance: 0.1745
+          weight: 1.0
