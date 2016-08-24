@@ -99,6 +99,7 @@ bool Overwrite(moveit_msgs::PlanningOptions& o, YAML::Node n);
 template <typename T>
 bool Overwrite(std::vector<T>& v, YAML::Node n)
 {
+    v.clear();
     for (auto it = n.begin(); it != n.end(); ++it) {
         v.emplace_back();
         YAML::Node nn = *it;
@@ -536,7 +537,7 @@ bool OverwriteGoal(
     const boost::filesystem::path& scenario_filepath,
     moveit_msgs::MoveGroupGoal& goal)
 {
-    ROS_DEBUG_STREAM("merging config from " << scenario_filepath);
+    ROS_INFO_STREAM("merging config from " << scenario_filepath);
     std::ifstream ifs(scenario_filepath.c_str());
     YAML::Node config = YAML::LoadFile(scenario_filepath.c_str());
 
@@ -688,7 +689,7 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    ROS_INFO_STREAM("Parsed Move Group Goal:\n" << goal);
+    ROS_DEBUG_STREAM("Parsed Move Group Goal:\n" << goal);
 
     typedef actionlib::SimpleActionClient<moveit_msgs::MoveGroupAction>
     MoveGroupActionClient;
