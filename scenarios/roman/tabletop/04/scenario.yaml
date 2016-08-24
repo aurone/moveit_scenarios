@@ -1,8 +1,15 @@
-# start state = zero, goal pose = under table
+# start state = under table, goal pose = over table
 request:
   start_state:
     joint_state:
-      position: [ 0, 0, 0, 0, 0, 0, 0 ]
+      position:
+        - -1.1592476891746
+        - 1.4041173832294
+        - 0.87039569796957
+        - 0.004014257279587
+        - -0.84491389089045
+        - 1.7221163729428
+        - -1.099208362906
   goal_constraints:
     - position_constraints:
         - header:
@@ -13,11 +20,11 @@ request:
               - type: 2
                 dimensions: [ 0.05 ]
             primitive_poses:
-              - position: { x: 0.760794304672, y: -0.265482971912, z: 0.38992260999 }
-                orientation: { x: -0.498953504938, y: -0.483046152772, z: 0.501951051621, w: 0.515516203411 }
+              - position: { x: 0.9077, y: -0.1753, z: 1.1068 }
+                orientation: { w: 0.6826, x: -0.6837, y: -0.1823, z: 0.1826 }
           weight: 1.0
       orientation_constraints:
-        - orientation: { x: -0.498953504938, y: -0.483046152772, z: 0.501951051621, w: 0.515516203411 }
+        - orientation: { w: 0.6826, x: -0.6837, y: -0.1823, z: 0.1826 }
           link_name: limb_right_link7
           absolute_x_axis_tolerance: 0.1745
           absolute_y_axis_tolerance: 0.1745

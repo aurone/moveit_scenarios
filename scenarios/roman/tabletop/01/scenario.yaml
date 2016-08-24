@@ -1,3 +1,4 @@
+# start state = zero, goal pose = over table
 request:
   start_state:
     joint_state:
