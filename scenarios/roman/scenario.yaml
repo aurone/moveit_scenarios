@@ -13,6 +13,6 @@ request:
   start_state:
     joint_state:
       name: [ limb_right_joint1, limb_right_joint2, limb_right_joint3, limb_right_joint4, limb_right_joint5, limb_right_joint6, limb_right_joint7 ]
-  planner_id: LARA*
+  planner_id: ARA*
   group_name: right_arm
   allowed_planning_time: 10.0
