@@ -536,7 +536,7 @@ bool OverwriteGoal(
     const boost::filesystem::path& scenario_filepath,
     moveit_msgs::MoveGroupGoal& goal)
 {
-    ROS_INFO_STREAM("merging config from " << scenario_filepath);
+    ROS_DEBUG_STREAM("merging config from " << scenario_filepath);
     std::ifstream ifs(scenario_filepath.c_str());
     YAML::Node config = YAML::LoadFile(scenario_filepath.c_str());
 
@@ -555,8 +555,8 @@ bool ParseGoal(
     const boost::filesystem::path& scenario_path,
     moveit_msgs::MoveGroupGoal& goal)
 {
-    ROS_INFO_STREAM("Absolute Base Path: " << root_scenario_path);
-    ROS_INFO_STREAM("Absolute Path: " << scenario_path);
+    ROS_DEBUG_STREAM("Absolute Base Path: " << root_scenario_path);
+    ROS_DEBUG_STREAM("Absolute Path: " << scenario_path);
 
     // check that scenario_path is an ancestor of root_scenario_path
     const std::string base_path_str = root_scenario_path.generic_string();
@@ -591,7 +591,7 @@ bool ParseGoal(
         base_path_entries.clear();
     }
 
-    ROS_INFO_STREAM("trailing path entries: " << path_entries);
+    ROS_DEBUG_STREAM("trailing path entries: " << path_entries);
 
     boost::filesystem::path p = root_scenario_path;
     bool done = false;
@@ -617,24 +617,24 @@ bool ParseGoal(
 
 void PrintPathInfo(const boost::filesystem::path& p)
 {
-  ROS_INFO_STREAM("root_name(): "           << p.root_name());
-  ROS_INFO_STREAM("root_directory(): "      << p.root_directory());
-  ROS_INFO_STREAM("root_path(): "           << p.root_path());
-  ROS_INFO_STREAM("relative_path(): "       << p.relative_path());
-  ROS_INFO_STREAM("parent_path(): "         << p.parent_path());
-  ROS_INFO_STREAM("filename(): "            << p.filename());
-  ROS_INFO_STREAM("stem(): "                << p.stem());
-  ROS_INFO_STREAM("extension(): "           << p.extension());
-  ROS_INFO_STREAM("empty(): "               << p.empty());
-  ROS_INFO_STREAM("is_absolute(): "         << p.is_absolute());
-  ROS_INFO_STREAM("has_root_name(): "       << p.has_root_name());
-  ROS_INFO_STREAM("has_root_directory(): "  << p.has_root_directory());
-  ROS_INFO_STREAM("has_root_path(): "       << p.has_root_path());
-  ROS_INFO_STREAM("has_relative_path(): "   << p.has_relative_path());
-  ROS_INFO_STREAM("has_parent_path(): "     << p.has_parent_path());
-  ROS_INFO_STREAM("has_filename(): "        << p.has_filename());
-  ROS_INFO_STREAM("has_stem(): "            << p.has_stem());
-  ROS_INFO_STREAM("has_extension(): "       << p.has_extension());
+  ROS_DEBUG_STREAM("root_name(): "           << p.root_name());
+  ROS_DEBUG_STREAM("root_directory(): "      << p.root_directory());
+  ROS_DEBUG_STREAM("root_path(): "           << p.root_path());
+  ROS_DEBUG_STREAM("relative_path(): "       << p.relative_path());
+  ROS_DEBUG_STREAM("parent_path(): "         << p.parent_path());
+  ROS_DEBUG_STREAM("filename(): "            << p.filename());
+  ROS_DEBUG_STREAM("stem(): "                << p.stem());
+  ROS_DEBUG_STREAM("extension(): "           << p.extension());
+  ROS_DEBUG_STREAM("empty(): "               << p.empty());
+  ROS_DEBUG_STREAM("is_absolute(): "         << p.is_absolute());
+  ROS_DEBUG_STREAM("has_root_name(): "       << p.has_root_name());
+  ROS_DEBUG_STREAM("has_root_directory(): "  << p.has_root_directory());
+  ROS_DEBUG_STREAM("has_root_path(): "       << p.has_root_path());
+  ROS_DEBUG_STREAM("has_relative_path(): "   << p.has_relative_path());
+  ROS_DEBUG_STREAM("has_parent_path(): "     << p.has_parent_path());
+  ROS_DEBUG_STREAM("has_filename(): "        << p.has_filename());
+  ROS_DEBUG_STREAM("has_stem(): "            << p.has_stem());
+  ROS_DEBUG_STREAM("has_extension(): "       << p.has_extension());
 }
 
 int main(int argc, char* argv[])
@@ -688,7 +688,7 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    ROS_DEBUG_STREAM("Parsed Move Group Goal:\n" << goal);
+    ROS_INFO_STREAM("Parsed Move Group Goal:\n" << goal);
 
     typedef actionlib::SimpleActionClient<moveit_msgs::MoveGroupAction>
     MoveGroupActionClient;
