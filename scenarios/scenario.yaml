@@ -3,7 +3,6 @@
 # * `stamp` fields take in an integer as the nanosecond count
 # * default overrides noted:
 # *     planning_options.plan_only to true
-# *     planning_options.planning_scene_diff.world.octomap.binary to true (?)
 # *     num_planning_attempts to 1
 #
 request:
@@ -109,7 +108,7 @@ planning_options:
             seq: 0
             stamp: 0
             frame_id: ""
-          binary: true
+          binary: false
           id: ""
           resolution: 0.0
           data: []
