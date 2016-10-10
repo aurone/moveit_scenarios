@@ -1,0 +1,2 @@
+#!/bin/bash
+rosrun moveit_scenarios sync_box plane ground_plane 0 0 0 0 0 1 0

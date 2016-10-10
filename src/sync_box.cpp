@@ -42,251 +42,403 @@ class BoxSynchronizer
 {
 public:
 
-    BoxSynchronizer() :
-        m_nh(),
-        m_collision_object_pub(),
-        m_get_planning_scene_srv()
-    {
-        ROS_INFO("Hating everything");
-        m_collision_object_pub =
-                m_nh.advertise<moveit_msgs::CollisionObject>(
-                        "collision_object", 5);
-        m_get_planning_scene_srv =
-                m_nh.serviceClient<moveit_msgs::GetPlanningScene>(
-                        "get_planning_scene");
-        ros::Duration(1.0).sleep();
-        ROS_INFO("...still hate everything");
-    }
+    BoxSynchronizer();
 
-    void sync(
-        const std::string& name,
-        double x, double y, double z,
-        double length, double width, double height)
-    {
-        moveit_msgs::CollisionObject obj;
-        try {
-            if (retrieveBox(name, obj)) {
-                if (obj.primitives.size() != 1 ||
-                    obj.primitives.front().type != shape_msgs::SolidPrimitive::BOX)
-                {
-                    // this is not the box you're looking for
-                    removeObject(name);
-                    addBox(name, x, y, z, length, width, height);
-                }
-                else if (hasDimensions(obj, length, width, height) &&
-                    hasPosition(obj, x, y, z))
-                {
-                    // box is the same box
-                    ROS_DEBUG("Box is the same box");
-                    return;
-                }
-                else if (hasDimensions(obj, length, width, height)) {
-                    // box moved position
-                    moveBox(obj, x, y, z);
-                }
-                else if (hasPosition(obj, x, y, z)) {
-                    // box grew or shrunk
-                    removeObject(name);
-                    addBox(name, x, y, z, length, width, height);
-                }
-                else {
-                    // box is completely different
-                    removeObject(name);
-                    addBox(name, x, y, z, length, width, height);
-                }
-            }
-            else {
-                // there is no box
-                addBox(name, x, y, z, length, width, height);
-            }
-        }
-        catch (const std::runtime_error& ex) {
-            // ...whatever, doing this on a loop now
-        }
-    }
+    void sync(const moveit_msgs::CollisionObject& object);
 
 private:
 
     ros::NodeHandle m_nh;
-    ros::Publisher m_collision_object_pub;
-    ros::ServiceClient m_get_planning_scene_srv;
+    ros::Publisher m_object_pub;
+    ros::ServiceClient m_get_scene_srv;
 
-    bool hasDimensions(
-        const moveit_msgs::CollisionObject& obj,
-        double length,
-        double width,
-        double height) const
-    {
-        return obj.primitives.size() == 1 &&
-                obj.primitives.front().dimensions.size() == 3 &&
-                obj.primitives.front().dimensions[0] == length &&
-                obj.primitives.front().dimensions[1] == width &&
-                obj.primitives.front().dimensions[2] == height;
-    }
+    bool compareObjects(
+        const moveit_msgs::CollisionObject& o1,
+        const moveit_msgs::CollisionObject& o2) const;
 
-    bool hasPosition(
-        const moveit_msgs::CollisionObject& obj,
-        double x, double y, double z) const
-    {
-        return obj.primitive_poses.size() == 1 &&
-                obj.primitive_poses.front().orientation.w == 1.0 &&
-                obj.primitive_poses.front().orientation.x == 0.0 &&
-                obj.primitive_poses.front().orientation.y == 0.0 &&
-                obj.primitive_poses.front().orientation.z == 0.0 &&
-                obj.primitive_poses.front().position.x == x &&
-                obj.primitive_poses.front().position.y == y &&
-                obj.primitive_poses.front().position.z == z;
-   }
+    bool comparePrimitives(
+        const moveit_msgs::CollisionObject& o1,
+        const moveit_msgs::CollisionObject& o2) const;
 
-    // returns true if box was found in planning scene; false otherwise
-    bool retrieveBox(const std::string& name, moveit_msgs::CollisionObject& obj)
-    {
-        ROS_DEBUG("Waiting for /get_planning_scene service");
-        m_get_planning_scene_srv.waitForExistence();
+    bool comparePrimitive(
+        const shape_msgs::SolidPrimitive& p1,
+        const shape_msgs::SolidPrimitive& p2) const;
 
-        // get the planning scene
-        moveit_msgs::GetPlanningScene packet;
-        packet.request.components.components =
-                moveit_msgs::PlanningSceneComponents::WORLD_OBJECT_NAMES |
-                moveit_msgs::PlanningSceneComponents::WORLD_OBJECT_GEOMETRY;
-        if (!m_get_planning_scene_srv.call(packet)) {
-            ROS_ERROR("Failed to call service");
-            throw std::runtime_error("Failed to retrieve planning scene");
-        }
+    bool comparePlanes(
+        const moveit_msgs::CollisionObject& o1,
+        const moveit_msgs::CollisionObject& o2) const;
 
-        // look for the box
-        const moveit_msgs::PlanningSceneWorld& world =
-                packet.response.scene.world;
-        auto it = std::find_if(
-            world.collision_objects.begin(), world.collision_objects.end(),
-            [&](const moveit_msgs::CollisionObject& o)
-            {
-                return o.id == name;
-            });
+    bool comparePlane(
+        const shape_msgs::Plane& p1,
+        const shape_msgs::Plane& p2) const;
 
-        if (it != world.collision_objects.end()) {
-            obj = *it;
-            return true;
+    bool comparePoses(
+        const moveit_msgs::CollisionObject& o1,
+        const moveit_msgs::CollisionObject& o2) const;
+
+    // returns true if object was found in planning scene; false otherwise
+    bool retrieveObject(const std::string& name, moveit_msgs::CollisionObject& obj);
+
+    void addObject(const moveit_msgs::CollisionObject& o);
+
+    void removeObject(const std::string& name);
+
+    void moveObject(const moveit_msgs::CollisionObject& obj);
+};
+
+BoxSynchronizer::BoxSynchronizer() :
+    m_nh(),
+    m_object_pub(),
+    m_get_scene_srv()
+{
+    ROS_INFO("Let ROS setup");
+    m_object_pub = m_nh.advertise<moveit_msgs::CollisionObject>(
+            "collision_object", 5);
+    m_get_scene_srv = m_nh.serviceClient<moveit_msgs::GetPlanningScene>(
+            "get_planning_scene");
+    ros::Duration(1.0).sleep();
+    ROS_INFO("...hope it's done");
+}
+
+/// Query the server for existence of a collision object. If the object does not
+/// exist on the server, send a request to add the object. If the object does
+/// exist but at a different pose, send a request to move the object. If an
+/// object exists with the same name but is a different object, then send a
+/// request to replace the object.
+void BoxSynchronizer::sync(const moveit_msgs::CollisionObject& object)
+{
+    moveit_msgs::CollisionObject obj;
+    try {
+        if (retrieveObject(object.id, obj)) {
+            if (!compareObjects(object, obj)) {
+                ROS_INFO("objects differ");
+
+                // may not be necessary if moveit automatically replaces old
+                // objects
+                removeObject(object.id);
+
+                addObject(object);
+            } else if (!comparePoses(object, obj)) {
+                moveObject(object);
+            }
         }
         else {
+            addObject(object);
+        }
+    }
+    catch (const std::runtime_error& ex) {
+        // ...whatever, doing this on a loop now
+    }
+}
+
+bool BoxSynchronizer::compareObjects(
+    const moveit_msgs::CollisionObject& o1,
+    const moveit_msgs::CollisionObject& o2) const
+{
+    if (o1.primitives.size() != o2.primitives.size() ||
+        o1.planes.size() != o2.planes.size())
+    {
+        return false;
+    }
+
+    if (!o1.primitives.empty()) {
+        return comparePrimitives(o1, o2);
+    } else if (!o1.planes.empty()) {
+        return comparePlanes(o1, o2);
+    } else {
+        // covers empty arrays (and meshes)
+        return true;
+    }
+}
+
+// Test if two objects are equal via the primitives they are composed of. The
+// primitives must appear in the same order in both objects, have the same
+// types, and have the same dimensions. Poses are not tested.
+bool BoxSynchronizer::comparePrimitives(
+    const moveit_msgs::CollisionObject& o1,
+    const moveit_msgs::CollisionObject& o2) const
+{
+    if (o1.primitives.size() != o2.primitives.size()) {
+        return false;
+    }
+    for (size_t i = 0; i < o1.primitives.size(); ++i) {
+        if (!comparePrimitive(o1.primitives[i], o2.primitives[i])) {
+            return false;
+        }
+    }
+    return true;
+}
+
+// Test if two primitives have the same type and dimensions.
+bool BoxSynchronizer::comparePrimitive(
+    const shape_msgs::SolidPrimitive& p1,
+    const shape_msgs::SolidPrimitive& p2) const
+{
+    if (p1.type != p2.type) {
+        return false;
+    }
+
+    return p1.dimensions == p2.dimensions;
+}
+
+// Test if two planes are equal. The planes must appear in the same order in
+// both objects and have the same dimensions. Poses are not tested.
+bool BoxSynchronizer::comparePlanes(
+    const moveit_msgs::CollisionObject& o1,
+    const moveit_msgs::CollisionObject& o2) const
+{
+    if (o1.planes.size() != o2.planes.size()) {
+        return false;
+    }
+    for (size_t i = 0; i < o1.planes.size(); ++i) {
+        if (!comparePlane(o1.planes[i], o2.planes[i])) {
+            return false;
+        }
+    }
+    return true;
+}
+
+// Test if two planes have the same equation.
+bool BoxSynchronizer::comparePlane(
+    const shape_msgs::Plane& p1,
+    const shape_msgs::Plane& p2) const
+{
+    return p1.coef == p2.coef;
+}
+
+bool BoxSynchronizer::comparePoses(
+    const moveit_msgs::CollisionObject& o1,
+    const moveit_msgs::CollisionObject& o2) const
+{
+    auto poses_equal = [](
+        const geometry_msgs::Pose& p1,
+        const geometry_msgs::Pose& p2)
+    {
+        return p1.position.x == p2.position.x &&
+                p1.position.y == p2.position.y &&
+                p1.position.z == p2.position.z &&
+                p1.orientation.w == p2.orientation.w &&
+                p1.orientation.x == p2.orientation.x &&
+                p1.orientation.y == p2.orientation.y &&
+                p1.orientation.z == p2.orientation.z;
+    };
+
+    // assumes the objects are the same
+    for (size_t i = 0; i < o1.primitive_poses.size(); ++i) {
+        const geometry_msgs::Pose& p1 = o1.primitive_poses[i];
+        const geometry_msgs::Pose& p2 = o2.primitive_poses[i];
+        if (!poses_equal(p1, p2)) {
+            return false;
+        }
+    }
+    for (size_t i = 0; i < o1.plane_poses.size(); ++i) {
+        const geometry_msgs::Pose& p1 = o1.plane_poses[i];
+        const geometry_msgs::Pose& p2 = o2.plane_poses[i];
+        if (!poses_equal(p1, p2)) {
             return false;
         }
     }
 
-    void addBox(
-        const std::string& name,
-        double x, double y, double z,
-        double length, double width, double height)
-    {
-        moveit_msgs::CollisionObject box_object;
-        box_object.header.seq = 0;
-        box_object.header.stamp = ros::Time::now();
-        box_object.header.frame_id = "odom_combined";
-        box_object.id = name;
-        shape_msgs::SolidPrimitive primitive;
-        primitive.type = shape_msgs::SolidPrimitive::BOX;
-        primitive.dimensions.resize(3);
-        primitive.dimensions[0] = length;
-        primitive.dimensions[1] = width;
-        primitive.dimensions[2] = height;
+    return true;
+}
 
-        geometry_msgs::Pose box_pose;
-        box_pose.orientation.w = 1.0;
-        box_pose.orientation.x = box_pose.orientation.y = box_pose.orientation.z = 0.0;
-        box_pose.position.x = x;
-        box_pose.position.y = y;
-        box_pose.position.z = z;
+// returns true if object was found in planning scene; false otherwise
+bool BoxSynchronizer::retrieveObject(
+    const std::string& name,
+    moveit_msgs::CollisionObject& obj)
+{
+    ROS_DEBUG("Waiting for /get_planning_scene service");
+    m_get_scene_srv.waitForExistence();
 
-        box_object.primitives.push_back(primitive);
-        box_object.primitive_poses.push_back(box_pose);
-
-        box_object.operation = moveit_msgs::CollisionObject::ADD;
-
-        ROS_INFO("Adding box '%s'", name.c_str());
-        m_collision_object_pub.publish(box_object);
-        ros::Duration(1.0).sleep();
+    // get the planning scene
+    moveit_msgs::GetPlanningScene packet;
+    packet.request.components.components =
+            moveit_msgs::PlanningSceneComponents::WORLD_OBJECT_NAMES |
+            moveit_msgs::PlanningSceneComponents::WORLD_OBJECT_GEOMETRY;
+    if (!m_get_scene_srv.call(packet)) {
+        ROS_ERROR("Failed to call service");
+        throw std::runtime_error("Failed to retrieve planning scene");
     }
 
-    void removeObject(const std::string& name)
-    {
-        moveit_msgs::CollisionObject box_object;
-        box_object.header.stamp = ros::Time::now();
-        box_object.id = name;
-        box_object.operation = moveit_msgs::CollisionObject::REMOVE;
-        ROS_INFO("Removing box '%s'", name.c_str());
-        m_collision_object_pub.publish(box_object);
-        ros::Duration(1.0).sleep();
-    }
+    // look for the box
+    const moveit_msgs::PlanningSceneWorld& world =
+            packet.response.scene.world;
+    auto it = std::find_if(
+        world.collision_objects.begin(), world.collision_objects.end(),
+        [&](const moveit_msgs::CollisionObject& o)
+        {
+            return o.id == name;
+        });
 
-    void moveBox(
-        const moveit_msgs::CollisionObject& obj,
-        double x, double y, double z)
-    {
-        moveit_msgs::CollisionObject box = obj;
-        box.header.seq = 0;
-        box.header.stamp = ros::Time::now();
-        box.primitive_poses.front().position.x = x;
-        box.primitive_poses.front().position.y = y;
-        box.primitive_poses.front().position.z = z;
-        box.primitives.clear();
-        box.operation = moveit_msgs::CollisionObject::MOVE;
-        ROS_INFO("Moving box '%s' in frame '%s'", box.id.c_str(), box.header.frame_id.c_str());
-        m_collision_object_pub.publish(box);
-        ros::Duration(1.0).sleep();
+    if (it != world.collision_objects.end()) {
+        obj = *it;
+        return true;
     }
-};
+    else {
+        return false;
+    }
+}
+
+void BoxSynchronizer::addObject(const moveit_msgs::CollisionObject& o)
+{
+    ROS_INFO("Add box '%s'", o.id.c_str());
+    moveit_msgs::CollisionObject oo = o;
+    oo.header.stamp = ros::Time::now();
+    oo.operation = moveit_msgs::CollisionObject::ADD;
+    m_object_pub.publish(o);
+    ros::Duration(1.0).sleep();
+}
+
+void BoxSynchronizer::removeObject(const std::string& id)
+{
+    ROS_INFO("Remove box '%s'", id.c_str());
+    moveit_msgs::CollisionObject oo;
+    oo.header.stamp = ros::Time::now();
+    oo.id = id;
+    oo.operation = moveit_msgs::CollisionObject::REMOVE;
+    m_object_pub.publish(oo);
+    ros::Duration(1.0).sleep();
+}
+
+void BoxSynchronizer::moveObject(const moveit_msgs::CollisionObject& o)
+{
+    moveit_msgs::CollisionObject oo = o;
+    oo.header.stamp = ros::Time::now();
+    oo.operation = moveit_msgs::CollisionObject::MOVE;
+    ROS_INFO("Moving oo '%s' in frame '%s'", oo.id.c_str(), oo.header.frame_id.c_str());
+    m_object_pub.publish(oo);
+    ros::Duration(1.0).sleep();
+}
+
+void PrintUsage()
+{
+    fprintf(stderr, "Usage: sync_box <type> <name> <x> <y> <z> <dims...>\n");
+}
 
 // Add a table to the planning scene if one does not exist or modify the table
 // if the input arguments are different
 int main(int argc, char* argv[])
 {
-    // x, y, z, length, width, height
-    if (argc < 8) {
-        fprintf(stderr, "Usage: sync_box <x> <y> <z> <length> <width> <height> <name>\n");
-        return 1;
-    }
-
-    std::string xarg(argv[1]);
-    std::string yarg(argv[2]);
-    std::string zarg(argv[3]);
-    std::string length_arg(argv[4]);
-    std::string width_arg(argv[5]);
-    std::string height_arg(argv[6]);
-    std::string box_name(argv[7]);
-
-    double table_x = std::stod(xarg);
-    double table_y = std::stod(yarg);
-    double table_z = std::stod(zarg);
-    double table_length = std::stod(length_arg);
-    double table_width = std::stod(width_arg);
-    double table_height = std::stod(height_arg);
-
+    // this first to remove ros arguments
     ros::init(argc, argv, "add_table");
     ros::NodeHandle nh;
 
+    if (argc < 6) {
+        PrintUsage();
+        return 1;
+    }
+
+    std::string type_name(argv[1]);
+    std::string object_name(argv[2]);
+
+    // position args (even for planes)
+    std::string xarg(argv[3]);
+    std::string yarg(argv[4]);
+    std::string zarg(argv[5]);
+    double table_x = std::stod(xarg);
+    double table_y = std::stod(yarg);
+    double table_z = std::stod(zarg);
+
+    moveit_msgs::CollisionObject object;
+    object.header.frame_id = "map";
+    object.id = object_name;
+
+    if (type_name != "plane") {
+        object.primitives.resize(1);
+        object.primitive_poses.resize(1);
+        object.primitive_poses.front().position.x = table_x;
+        object.primitive_poses.front().position.y = table_y;
+        object.primitive_poses.front().position.z = table_z;
+        object.primitive_poses.front().orientation.w = 1.0;
+    } else {
+        object.planes.resize(1);
+        object.plane_poses.resize(1);
+        object.plane_poses.front().orientation.w = 1.0;
+    }
+
+    // fill in type-dependent variables
+    if (type_name == "box") {
+        if (argc < 9) {
+            PrintUsage();
+            return 1;
+        }
+        std::string length_arg(argv[6]);
+        std::string width_arg(argv[7]);
+        std::string height_arg(argv[8]);
+        double length = std::stod(length_arg);
+        double width = std::stod(width_arg);
+        double height = std::stod(height_arg);
+
+        shape_msgs::SolidPrimitive& prim = object.primitives.front();
+        prim.type = shape_msgs::SolidPrimitive::BOX;
+        prim.dimensions = { length, width, height };
+    } else if (type_name == "sphere") {
+        if (argc < 7) {
+            PrintUsage();
+            return 1;
+        }
+        std::string radius_arg(argv[6]);
+        double radius = std::stod(radius_arg);
+
+        shape_msgs::SolidPrimitive& prim = object.primitives.front();
+        prim.type = shape_msgs::SolidPrimitive::SPHERE;
+        prim.dimensions = { radius };
+    } else if (type_name == "cylinder") {
+        if (argc < 8) {
+            PrintUsage();
+            return 1;
+        }
+        std::string height_arg(argv[6]);
+        std::string radius_arg(argv[7]);
+        double height = std::stod(height_arg);
+        double radius = std::stod(radius_arg);
+
+        shape_msgs::SolidPrimitive& prim = object.primitives.front();
+        prim.type = shape_msgs::SolidPrimitive::CYLINDER;
+        prim.dimensions = { height, radius };
+    } else if (type_name == "cone") {
+        if (argc < 8) {
+            PrintUsage();
+            return 1;
+        }
+        std::string height_arg(argv[6]);
+        std::string radius_arg(argv[7]);
+        double height = std::stod(height_arg);
+        double radius = std::stod(radius_arg);
+
+        shape_msgs::SolidPrimitive& prim = object.primitives.front();
+        prim.type = shape_msgs::SolidPrimitive::CONE;
+        prim.dimensions = { height, radius };
+    } else if (type_name == "plane") {
+        if (argc < 10) {
+            PrintUsage();
+            return 1;
+        }
+        std::string a_arg(argv[6]);
+        std::string b_arg(argv[7]);
+        std::string c_arg(argv[8]);
+        std::string d_arg(argv[9]);
+        double a = std::stod(a_arg);
+        double b = std::stod(b_arg);
+        double c = std::stod(c_arg);
+        double d = std::stod(d_arg);
+
+        shape_msgs::Plane& plane = object.planes.front();
+        plane.coef[0] = a;
+        plane.coef[1] = b;
+        plane.coef[2] = c;
+        plane.coef[3] = d;
+    }
+
     BoxSynchronizer synchronizer;
 
-    ros::Rate loop_rate(10.0);
-    const ros::Rate sync_rate(1.0);
-    ros::Time last_sync = ros::Time(0);
-
-    ROS_INFO("Synchronizing box object '%s'", box_name.c_str());
+    ROS_INFO("Synchronizing collision object '%s'", object_name.c_str());
+    ros::Rate sync_rate(1.0);
     while (ros::ok()) {
-        const ros::Time now = ros::Time::now();
-        if (last_sync < (now - sync_rate.expectedCycleTime())) {
-            ROS_DEBUG("last sync: %0.3f", last_sync.toSec());
-            ROS_DEBUG("now: %0.3f", now.toSec());
-            ROS_DEBUG("sync cycle: %0.3f", sync_rate.expectedCycleTime().toSec());
-            // synchronize box
-            synchronizer.sync(
-                    box_name,
-                    table_x, table_y, table_z,
-                    table_length, table_width, table_height);
-            last_sync = now;
-        }
+        synchronizer.sync(object);
 
         ros::spinOnce();
-        loop_rate.sleep();
+        sync_rate.sleep();
     }
 
     return 0;
