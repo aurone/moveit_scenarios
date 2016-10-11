@@ -320,7 +320,7 @@ void PrintUsage()
 int main(int argc, char* argv[])
 {
     // this first to remove ros arguments
-    ros::init(argc, argv, "add_table");
+    ros::init(argc, argv, "sync_object", ros::init_options::AnonymousName);
     ros::NodeHandle nh;
 
     if (argc < 6) {
