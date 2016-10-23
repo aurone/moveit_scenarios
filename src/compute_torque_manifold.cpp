@@ -39,7 +39,7 @@
 #include <moveit/robot_model_loader/robot_model_loader.h>
 #include <moveit/robot_state/robot_state.h>
 #include <ros/ros.h>
-#include <sbpl_arm_planner/occupancy_grid.h>
+#include <smpl/occupancy_grid.h>
 #include <visualization_msgs/MarkerArray.h>
 
 namespace distance_field {

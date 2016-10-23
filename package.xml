@@ -25,5 +25,5 @@
   <depend>roscpp</depend>
   <depend>sbpl_geometry_utils</depend>
   <depend>visualization_msgs</depend>
-  <depend>sbpl_arm_planner</depend>
+  <depend>smpl</depend>
 </package>

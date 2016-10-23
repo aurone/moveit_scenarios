@@ -17,7 +17,7 @@ find_package(
         moveit_ros_planning
         moveit_ros_planning_interface
         roscpp
-        sbpl_arm_planner
+        smpl
         sbpl_geometry_utils
         visualization_msgs)
 find_package(Eigen REQUIRED)
