@@ -1,15 +1,5 @@
 # start state = over table, goal pose = under table
 request:
-  start_state:
-    joint_state:
-      position:
-        - 0.072431163957765
-        - 1.4437363572497
-        - 1.7982127283298
-        - 0.0010471975511966
-        - -1.8018779197589
-        - 1.6704546270838
-        - 0.12601277199399
   goal_constraints:
     - position_constraints:
         - header:
@@ -30,3 +20,48 @@ request:
           absolute_y_axis_tolerance: 0.1745
           absolute_z_axis_tolerance: 0.1745
           weight: 1.0
+
+planning_options:
+  planning_scene_diff:
+    robot_state:
+      joint_state:
+        position:
+          - 0.0
+          - 0.0
+          - 0.0
+          - 0.0
+          - 0.0
+          - 0.0
+          - 0.0
+          - 0.0
+          - 0.0
+          - 0.0
+          - 0.0
+          - 0.0
+          - 0.0
+          - 0.0
+          - 0.0
+          - 0.0
+          - 0.0
+          - 0.0
+          - 0.0
+          - 0.0
+          - 0.0
+          - 0.072431163957765
+          - 1.4437363572497
+          - 1.7982127283298
+          - 0.0010471975511966
+          - -1.8018779197589
+          - 1.6704546270838
+          - 0.12601277199399
+          - 0.0
+          - 0.0
+          - 0.0
+          - 0.0
+          - 0.0
+          - 0.0
+          - 0.0
+          - 0.0
+          - 0.0
+          - 0.0
+          - 0.0

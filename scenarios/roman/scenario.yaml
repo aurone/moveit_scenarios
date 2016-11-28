@@ -1,3 +1,10 @@
+# fill common request parameters for the Roman
+# * set the workspace bounding box in the robot frame
+# * set the group name to plan for
+# * set the planner to use
+# * set the allowed planning time
+# * define joint name order for the start state
+# * define an identity transform from the map frame to the robot frame
 request:
   workspace_parameters:
     header:
@@ -9,10 +16,85 @@ request:
     max_corner:
       x: 1.5
       y: 0.5
-      z: 2.0
+      z: 1.9
   start_state:
-    joint_state:
-      name: [ limb_right_joint1, limb_right_joint2, limb_right_joint3, limb_right_joint4, limb_right_joint5, limb_right_joint6, limb_right_joint7 ]
-  planner_id: ARA*
+    is_diff: true
+#  planner_id: right_arm[egwastar.bfs_egraph.manip_egraph]
+  planner_id: right_arm[right_arm_ARA_BFS_ML]
   group_name: right_arm
-  allowed_planning_time: 15.0
+  allowed_planning_time: 10.0
+
+planning_options:
+  planning_scene_diff:
+    robot_state:
+      joint_state:
+        header:
+          seq: 0
+          stamp: 0
+          frame_id: ""
+        name:
+          - track_left_joint
+          - track_right_joint
+          - torso_joint1
+          - limb_left_joint1
+          - limb_left_joint2
+          - limb_left_joint3
+          - limb_left_joint4
+          - limb_left_joint5
+          - limb_left_joint6
+          - limb_left_joint7
+          - limb_left_finger_1_joint_1
+          - limb_left_finger_1_joint_2
+          - limb_left_finger_1_joint_3
+          - limb_left_finger_2_joint_1
+          - limb_left_finger_2_joint_2
+          - limb_left_finger_2_joint_3
+          - limb_left_finger_middle_joint_1
+          - limb_left_finger_middle_joint_2
+          - limb_left_finger_middle_joint_3
+          - limb_left_palm_finger_1_joint
+          - limb_left_palm_finger_2_joint
+          - limb_right_joint1
+          - limb_right_joint2
+          - limb_right_joint3
+          - limb_right_joint4
+          - limb_right_joint5
+          - limb_right_joint6
+          - limb_right_joint7
+          - limb_right_finger_1_joint_1
+          - limb_right_finger_1_joint_2
+          - limb_right_finger_1_joint_3
+          - limb_right_finger_2_joint_1
+          - limb_right_finger_2_joint_2
+          - limb_right_finger_2_joint_3
+          - limb_right_finger_middle_joint_1
+          - limb_right_finger_middle_joint_2
+          - limb_right_finger_middle_joint_3
+          - limb_right_palm_finger_1_joint
+          - limb_right_palm_finger_2_joint
+        position: []
+        velocity: []
+        effort: []
+      multi_dof_joint_state:
+        header:
+          seq: 0
+          stamp: 0
+          frame_id: ""
+        joint_names: []
+        transforms: []
+      attached_collision_objects: []
+      is_diff: false
+    fixed_frame_transforms:
+      - header:
+          frame_id: map
+        child_frame_id: base_footprint
+        transform:
+          translation:
+            x: 0.0
+            y: 0.0
+            z: 0.0
+          rotation:
+            x: 0.0
+            y: 0.0
+            z: 0.0
+            w: 1.0

@@ -689,7 +689,7 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    ROS_DEBUG_STREAM("Parsed Move Group Goal:\n" << goal);
+    ROS_INFO_STREAM("Parsed Move Group Goal:\n" << goal);
 
     typedef actionlib::SimpleActionClient<moveit_msgs::MoveGroupAction>
     MoveGroupActionClient;
@@ -705,11 +705,13 @@ int main(int argc, char* argv[])
     ROS_DEBUG("Waiting for result");
     move_group_client.waitForResult();
 
-    if (move_group_client.getState() ==
+    if (move_group_client.getState() !=
             actionlib::SimpleClientGoalState::SUCCEEDED)
     {
-        ROS_DEBUG("Result received");
+        ROS_ERROR("Request failed");
+        return 1;
     }
 
+    ROS_DEBUG("Result received");
     return 0;
 }

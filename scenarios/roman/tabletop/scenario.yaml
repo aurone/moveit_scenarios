@@ -1,9 +1,10 @@
+# Set the planning scene world to include a table in frame 'map'
 planning_options:
   planning_scene_diff:
     world:
       collision_objects:
         - header:
-            frame_id: odom_combined
+            frame_id: map
           id: table
           meshes:
             - triangles:
