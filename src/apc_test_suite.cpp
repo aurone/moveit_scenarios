@@ -33,13 +33,13 @@
 #include <sstream>
 #include <string>
 
-#include <sbpl_geometry_utils/utils.h>
 #include <geometry_msgs/Pose.h>
 #include <leatherman/print.h>
 #include <moveit/move_group_interface/move_group.h>
 #include <ros/ros.h>
-#include <tf/transform_listener.h>
+#include <smpl/angles.h>
 #include <tf/transform_datatypes.h>
+#include <tf/transform_listener.h>
 
 enum MainResult
 {
@@ -209,7 +209,7 @@ private:
         }
 
         m_move_group->setGoalJointTolerance(0.0);
-        m_move_group->setGoalOrientationTolerance(sbpl::utils::ToRadians(1.0));
+        m_move_group->setGoalOrientationTolerance(sbpl::angles::to_radians(1.0));
         m_move_group->setGoalPositionTolerance(0.05);
         m_move_group->setNumPlanningAttempts(1);
         m_move_group->setPlannerId("LARA*");
