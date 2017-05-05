@@ -121,8 +121,9 @@ int RightArmTorqueManifold::run()
 
     std::vector<Eigen::Vector3d> points;
     // loop over all cells in the distance field
-    int gxc, gyc, gzc;
-    m_grid->getGridSize(gxc, gyc, gzc);
+    int gxc = m_grid->numCellsX();
+    int gyc = m_grid->numCellsY();
+    int gzc = m_grid->numCellsZ();
 
     int num_cells = gxc * gyc * gzc;
     int i = 0;
