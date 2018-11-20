@@ -35,7 +35,7 @@
 
 #include <geometry_msgs/Pose.h>
 #include <leatherman/print.h>
-#include <moveit/move_group_interface/move_group.h>
+#include <moveit/move_group_interface/move_group_interface.h>
 #include <ros/ros.h>
 #include <smpl/angles.h>
 #include <tf/transform_datatypes.h>
@@ -140,7 +140,7 @@ private:
     std::vector<geometry_msgs::Pose> m_preposition_poses;
     std::vector<geometry_msgs::Pose> m_withdraw_poses;
 
-    std::unique_ptr<move_group_interface::MoveGroup> m_move_group;
+    std::unique_ptr<moveit::planning_interface::MoveGroupInterface> m_move_group;
 
     std::vector<bool> m_localization_results;
     std::vector<bool> m_image_acquisition_results;
@@ -201,7 +201,7 @@ private:
 
     void initializeMoveGroup()
     {
-        m_move_group.reset(new move_group_interface::MoveGroup("manipulator"));
+        m_move_group.reset(new moveit::planning_interface::MoveGroupInterface("manipulator"));
 
         boost::shared_ptr<tf::Transformer> tf(new tf::TransformListener);
         while (!tf->waitForTransform("base_link", m_move_group->getPlanningFrame(), ros::Time::now(), ros::Duration(1.0))) {
@@ -209,7 +209,7 @@ private:
         }
 
         m_move_group->setGoalJointTolerance(0.0);
-        m_move_group->setGoalOrientationTolerance(sbpl::angles::to_radians(1.0));
+        m_move_group->setGoalOrientationTolerance(smpl::to_radians(1.0));
         m_move_group->setGoalPositionTolerance(0.05);
         m_move_group->setNumPlanningAttempts(1);
         m_move_group->setPlannerId("LARA*");
@@ -250,7 +250,7 @@ private:
             }
             m_move_group->setPoseTarget(eet_pose, "ee_link");
 
-            moveit::planning_interface::MoveGroup::Plan plan;
+            moveit::planning_interface::MoveGroupInterface::Plan plan;
             moveit::planning_interface::MoveItErrorCode err;
 
 //            ROS_INFO_STREAM("Moving to ee pose " << eet_pose);

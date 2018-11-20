@@ -282,7 +282,7 @@ bool BirdhouseTestSuite::initGenerateGoalsSequence()
     std::vector<double> joint_variable_values;
     double d;
     while (ss >> d) {
-        joint_variable_values.push_back(sbpl::angles::to_radians(d));
+        joint_variable_values.push_back(smpl::to_radians(d));
     }
 
     if (joint_variable_values.size() != 7) {
@@ -481,7 +481,7 @@ bool BirdhouseTestSuite::moveLeftArm()
     std::vector<double> goal(left_arm->getVariableCount());
     std::vector<double> min_limits(left_arm->getVariableCount());
     std::vector<double> max_limits(left_arm->getVariableCount());
-    std::vector<double> inc(left_arm->getVariableCount(), sbpl::angles::to_radians(1.0));
+    std::vector<double> inc(left_arm->getVariableCount(), smpl::to_radians(1.0));
     std::vector<bool> continuous(left_arm->getVariableCount());
 
     for (size_t i = 0; i < left_arm->getVariableCount(); ++i) {
@@ -610,9 +610,9 @@ bool BirdhouseTestSuite::planToGoal(const geometry_msgs::Pose& goal_pose)
 
     goal_rot_constraint.link_name = tip_link;
 
-    goal_rot_constraint.absolute_x_axis_tolerance = sbpl::angles::to_radians(10.0);
-    goal_rot_constraint.absolute_y_axis_tolerance = sbpl::angles::to_radians(10.0);
-    goal_rot_constraint.absolute_z_axis_tolerance = sbpl::angles::to_radians(10.0);
+    goal_rot_constraint.absolute_x_axis_tolerance = smpl::to_radians(10.0);
+    goal_rot_constraint.absolute_y_axis_tolerance = smpl::to_radians(10.0);
+    goal_rot_constraint.absolute_z_axis_tolerance = smpl::to_radians(10.0);
 
     goal_rot_constraint.weight = 1.0;
 
@@ -782,9 +782,9 @@ bool BirdhouseTestSuite::planBetweenPoints(
 
     goal_rot_constraint.link_name = tip_link;
 
-    goal_rot_constraint.absolute_x_axis_tolerance = sbpl::angles::to_radians(10.0);
-    goal_rot_constraint.absolute_y_axis_tolerance = sbpl::angles::to_radians(10.0);
-    goal_rot_constraint.absolute_z_axis_tolerance = sbpl::angles::to_radians(10.0);
+    goal_rot_constraint.absolute_x_axis_tolerance = smpl::to_radians(10.0);
+    goal_rot_constraint.absolute_y_axis_tolerance = smpl::to_radians(10.0);
+    goal_rot_constraint.absolute_z_axis_tolerance = smpl::to_radians(10.0);
 
     goal_rot_constraint.weight = 1.0;
 

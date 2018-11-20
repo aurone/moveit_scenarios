@@ -40,6 +40,7 @@
 #include <moveit/robot_state/robot_state.h>
 #include <ros/ros.h>
 #include <smpl/occupancy_grid.h>
+#include <smpl/debug/marker_conversions.h>
 #include <visualization_msgs/MarkerArray.h>
 
 namespace distance_field {
@@ -68,7 +69,7 @@ private:
     moveit::core::RobotModelPtr m_robot_model;
     moveit::core::RobotStatePtr m_robot_state;
 
-    sbpl::OccupancyGridPtr m_grid;
+    std::unique_ptr<smpl::OccupancyGrid> m_grid;
 
     double m_weight_lbs;
 
@@ -96,7 +97,7 @@ bool RightArmTorqueManifold::init(
     // instantiate a distance field in the "torso_lift_link" frame, for
     // visualization of the manifold
     double max_dist_m = 0.2;
-    m_grid.reset(new sbpl::OccupancyGrid(
+    m_grid.reset(new smpl::OccupancyGrid(
             size_x, size_y, size_z, res, origin_x, origin_y, origin_z, max_dist_m));
     m_grid->setReferenceFrame("torso_lift_link");
 
@@ -207,11 +208,12 @@ int RightArmTorqueManifold::run()
 
     exportPoints(points);
 
-    visualization_msgs::MarkerArray ma = m_grid->getOccupiedVoxelsVisualization();
-    for (auto& marker : ma.markers) {
-        marker.ns = "torque_manifold";
-        marker.color.a = 1.0;
-    }
+    auto marker = m_grid->getOccupiedVoxelsVisualization();
+    marker.ns = "torque_manifold";
+    boost::get<smpl::visual::Color>(marker.color).a = 1.0;
+    visualization_msgs::MarkerArray ma;
+    ma.markers.resize(1);
+    ConvertMarkerToMarkerMsg(marker, ma.markers[0]);
     m_torque_manifold_pub.publish(ma);
 
     // get visualization and publish
